@@ -12,7 +12,9 @@ datasource db {
 
 model User {
   id Int @id @default(autoincrement())
-  userName String
   lastName String
+  firstName       String?   @db.VarChar(50)
+  intraId  Int?
+  email String? @unique
   createdAt DateTime @default(now())
 }

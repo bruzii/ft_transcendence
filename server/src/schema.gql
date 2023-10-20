@@ -3,13 +3,20 @@
 # ------------------------------------------------------
 
 input CreateUserInput {
+  email: String!
+  firstName: String!
+  intraId: Float!
   lastName: String!
-  userName: String!
 }
 
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 type Mutation {
-  createUser(createUserInput: CreateUserInput!): User!
   removeUser(id: Int!): User!
+  signUp(createUserInput: CreateUserInput!): User!
   updateUser(updateUserInput: UpdateUserInput!): User!
 }
 
@@ -19,13 +26,18 @@ type Query {
 }
 
 input UpdateUserInput {
-  id: Int!
+  createdAt: DateTime!
+  email: String!
+  firstName: String!
+  imgUrl: String!
+  intraId: Float!
   lastName: String!
   userName: String!
 }
 
 type User {
-  firstName: String!
+  createdAt: DateTime!
   id: Int!
+  intraId: Float!
   lastName: String!
 }

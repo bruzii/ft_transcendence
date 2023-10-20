@@ -6,9 +6,12 @@ export class User {
   id: number;
 
   @Field()
-  firstName: string;
+  lastName: string;
 
   @Field()
-  lastName: string;
+  intraId: number;
+
+  @Field()
+  createdAt: Date;
 
 }

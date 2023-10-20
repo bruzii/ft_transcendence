@@ -2,6 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
 import { PrismaService } from '../prisma/prisma.service';
+import { User } from './entities/user.entity';
+import { Response } from "express";
+import { HttpException } from '@nestjs/common';
+import { UserNotFoundError } from './dto/error-user';
+import { HttpStatus } from '@nestjs/common';
 
 @Injectable()
 export class UserService {
@@ -9,7 +14,7 @@ export class UserService {
 
   async create(createUserInput: CreateUserInput) {
     return await this.prisma.user.create({
-      data: {userName: createUserInput.userName, lastName: createUserInput.lastName},
+      data: createUserInput,
     });
   }
 
@@ -24,7 +29,7 @@ export class UserService {
   update(id: number, updateUserInput: UpdateUserInput) {
     return this.prisma.user.update({
       where: {id: id},
-      data: {userName: updateUserInput.userName, lastName: updateUserInput.lastName},
+      data: {lastName: updateUserInput.lastName},
       });
   }
 
