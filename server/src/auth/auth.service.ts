@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { JWT_TOKEN_TYPE } from './type/token';
+import { stringify } from 'querystring';
 
 export type UserDetails = {
   email: string;
@@ -38,88 +39,91 @@ export class AuthService {
       });
       return  token;
   }
-async validateUser(details: UserDetails, @Res() res: Response) {
-  console.log('AuthService');
+  async authVerification(details: UserDetails, @Res() res: Response) {
+    console.log('AuthService');
+    console.log("details : " + stringify(details));
 
-  try {
-    const user = await this.prisma.user.findUnique({ where: { email: details.email } });
-    console.log(user);
+    try {
+      const user = await this.prisma.user.findUnique({ where: { email: details.email } });
+      console.log(user);
 
-    if (user) {
-      // L'utilisateur existe, générez un token JWT
-      const token = this.createToken({ userId: user.id, email: user.email }, 'newToken');
-      const refreshToken = this.createToken({ userId: user.id, email: user.email }, 'refreshToken');
-      console.log("token : " + token);
-      // Ajoutez le JWT dans un cookie HTTP-only
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
-        sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
-      });
+      if (user) {
+        // L'utilisateur existe, générez un token JWT
+        const token = this.createToken({ userId: user.id, email: user.email }, 'newToken');
+        const refreshToken = this.createToken({ userId: user.id, email: user.email }, 'refreshToken');
+        console.log("token : " + token);
+        // Ajoutez le JWT dans un cookie HTTP-only
+        res.cookie('token', token, {
+          httpOnly: true,
+          secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
+          sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
+        });
 
-      res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
-        sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
-      });
-      
-      return user;
-    } else {
-      console.log('User not found. Creating...');
-      const send = {
-        email: details.email,
-        lastName: details.lastName,
-        firstName: details.firstName,
-      };
-      const newUser = await this.prisma.user.create({
-        data: send,
-      });
+        res.cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+          secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
+          sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
+        });
+        
+        return user;
+      } else {
+        console.log('User not found. Creating...');
+        const send = {
+          email: details.email,
+          lastName: details.lastName,
+          firstName: details.firstName,
+          intraId: Number(details.intraId),
+        };
+        console.log("send : " + JSON.stringify(send));
+        const newUser = await this.prisma.user.create({
+          data: send,
+        });
 
-      // L'utilisateur est créé, générez un token JWT
-      const token = this.createToken({ userId: user.id, email: user.email }, 'newToken');
-      const refreshToken = this.createToken({ userId: user.id, email: user.email }, 'refreshToken');
-      console.log("token : " + token);
-      // Ajoutez le JWT dans un cookie HTTP-only
-      res.cookie('token', token, {
-        httpOnly: true,
-        secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
-        sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
-      });
-      res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
-        sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
-      });
+        // L'utilisateur est créé, générez un token JWT
+        const token = this.createToken({ userId: newUser.id, email: newUser.email }, 'newToken');
+        const refreshToken = this.createToken({ userId: newUser.id, email: newUser.email }, 'refreshToken');
+        console.log("token : " + token);
+        // Ajoutez le JWT dans un cookie HTTP-only
+        res.cookie('token', token, {
+          httpOnly: true,
+          secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
+          sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
+        });
+        res.cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+          secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
+          sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
+        });
 
-      return newUser;
+        return newUser;
+      }
+    } catch (error) {
+      console.log(error);
+      // Gérez les erreurs ici, par exemple, renvoyez une réponse d'erreur appropriée.
+      throw new Error('Error in validateUser');
     }
-  } catch (error) {
-    console.log(error);
-    // Gérez les erreurs ici, par exemple, renvoyez une réponse d'erreur appropriée.
-    throw new Error('Error in validateUser');
-  }
-}
-
-async authenticate(req, @Res() res: Response) {
-  console.log(req.user);
-  if (!req.user) {
-    return 'No user from google';
   }
 
-  try {
-    const user = await this.validateUser(req.user, res); // Fournissez l'objet de réponse (res) ici
-    console.log(user);
-    console.log('User Info from Google');
-    return {
-      message: 'User Info from Google',
-      user: req.user,
-    };
-  } catch (error) {
-    // Gérez les erreurs ici, par exemple, renvoyez une réponse d'erreur appropriée.
-    console.log(error);
-    throw new Error('Error in authenticate');
+  async authenticate(req, @Res() res: Response) {
+    console.log(req.user);
+    if (!req.user) {
+      return 'No user from google';
+    }
+
+    try {
+      const user = await this.authVerification(req.user, res); // Fournissez l'objet de réponse (res) ici
+      console.log(user);
+      console.log('User Info from Google');
+      return {
+        message: 'User Info from Google',
+        user: req.user,
+      };
+    } catch (error) {
+      // Gérez les erreurs ici, par exemple, renvoyez une réponse d'erreur appropriée.
+      console.log(error);
+      throw new Error('Error in authenticate');
+    }
   }
-}
 
   hello() {
     return "Hello"

@@ -16,5 +16,6 @@ model User {
   firstName       String?   @db.VarChar(50)
   intraId  Int?
   email String? @unique
+  TwoFA   Boolean? @default(false)
   createdAt DateTime @default(now())
 }

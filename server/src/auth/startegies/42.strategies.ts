@@ -17,10 +17,12 @@ export class FortyTwoStrategy extends PassportStrategy(Strategy, '42') {
         });
     }
     async validate(accessToken: string, refreshToken: string, profile: any, done: VerifyCallback): Promise<any> {
-        const { name, emails, photos } = profile
-        console.log("profile : " + stringify(profile));
+        const { name, emails, photos, id } = profile
+        // console.log("profile : " + stringify(profile));
+        console.log("id : " + id);
         const user = {
             email: emails[0].value,
+            intraId: id,
             firstName: name.givenName,
             lastName: name.familyName,
             picture: photos[0].value,
