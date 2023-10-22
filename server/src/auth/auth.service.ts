@@ -9,6 +9,7 @@ import { Response } from 'express';
 import * as jwt from 'jsonwebtoken';
 import { JWT_TOKEN_TYPE } from './type/token';
 import { stringify } from 'querystring';
+import { AuthTwoFAService } from './2FA/twoFA-generator';
 
 export type UserDetails = {
   email: string;
@@ -19,7 +20,10 @@ export type UserDetails = {
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly users_svc: UserService, private prisma : PrismaService, private readonly jwtServ: JwtService  ) {}
+  constructor(private readonly users_svc: UserService,
+     private prisma : PrismaService,
+      private readonly jwtServ: JwtService,
+      private authTwoFAService:AuthTwoFAService  ) {}
   
   validateToken(token: string) {
     return this.jwtServ.verify(token, {
@@ -65,7 +69,10 @@ export class AuthService {
           sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
         });
         
-        return user;
+        return {
+          user: user,
+          token : token,
+        };
       } else {
         console.log('User not found. Creating...');
         const send = {
@@ -74,7 +81,7 @@ export class AuthService {
           firstName: details.firstName,
           intraId: Number(details.intraId),
         };
-        console.log("send : " + JSON.stringify(send));
+        // console.log("send : " + JSON.stringify(send));
         const newUser = await this.prisma.user.create({
           data: send,
         });
@@ -95,7 +102,10 @@ export class AuthService {
           sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
         });
 
-        return newUser;
+        return {
+          user : newUser,
+          token : token,
+        };
       }
     } catch (error) {
       console.log(error);
@@ -107,16 +117,19 @@ export class AuthService {
   async authenticate(req, @Res() res: Response) {
     console.log(req.user);
     if (!req.user) {
-      return 'No user from google';
+      return {
+        sucess: false,
+      };
     }
 
     try {
       const user = await this.authVerification(req.user, res); // Fournissez l'objet de réponse (res) ici
-      console.log(user);
-      console.log('User Info from Google');
+      // console.log("user : " + JSON.stringify(user));
       return {
-        message: 'User Info from Google',
-        user: req.user,
+        message: 'User Info from 42',
+        sucess: true,
+        user: user.user,
+        token: user.token
       };
     } catch (error) {
       // Gérez les erreurs ici, par exemple, renvoyez une réponse d'erreur appropriée.
@@ -134,12 +147,13 @@ export class AuthService {
   }
 
   findAll() {
+    // this.authTwoFAService.generateTwoFactorAuthenticationSecret({email: "test@gmail.com"});
     return `This action returns all auth`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth2`;
-  }
+  // findOne(id: number) {
+  //   return `This action returns a #${id} auth2`;
+  // }
 
   update(id: number, updateAuthDto: UpdateAuthDto) {
     return `This action updates a #${id} auth`;

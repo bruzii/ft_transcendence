@@ -1,11 +1,12 @@
-import { Module, Query} from '@nestjs/common';
+import { Module, Query, MiddlewareConsumer, RequestMethod} from '@nestjs/common';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 import { UserModule } from './user/user.module';
 import { PrismaService } from './prisma/prisma.service';
 import { AuthModule } from './auth/auth.module';
-
+import { FriendModule } from './friend/friend.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -17,8 +18,12 @@ import { AuthModule } from './auth/auth.module';
     }),
     UserModule,
     AuthModule,
+    FriendModule,
+    ChatModule,
   ],
   providers: [PrismaService],
 })
 
-export class AppModule {}
+export class AppModule {
+
+}

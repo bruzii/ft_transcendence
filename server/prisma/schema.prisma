@@ -11,11 +11,45 @@ datasource db {
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  lastName String
-  firstName       String?   @db.VarChar(50)
-  intraId  Int?
-  email String? @unique
-  TwoFA   Boolean? @default(false)
-  createdAt DateTime @default(now())
+  id             Int       @id @default(autoincrement())
+  lastName       String
+  firstName      String?   @db.VarChar(50)
+  intraId        Int?
+  email          String?   @unique
+  userName       String?
+  level          Int?      @default(0)
+  avatar         String?
+  win            Int?      @default(0)
+  lose           Int?      @default(0)
+  inGame         Boolean?  @default(false)
+  xp             Int?      @default(0)
+  connected      Boolean?  @default(false)
+  TwoFA          Boolean?  @default(false)
+  achievements   String[]
+  twoFactorAuthenticationSecret String?
+  friends        Friend[]  @relation("Friend_users")
+  friendOf       Friend[]  @relation("Friend_friends")
+  blocked        Blocked[] @relation("Blocked_users")
+  blockedBy      Blocked[] @relation("Blocked_blocked")
+  createdAt      DateTime  @default(now())
+}
+
+model Friend {
+  id       Int   @id @default(autoincrement())
+  user     User  @relation("Friend_users", fields: [userId], references: [id])
+  friend   User  @relation("Friend_friends", fields: [friendId], references: [id])
+  userId   Int
+  friendId Int
+
+  @@unique([userId, friendId])
+}
+
+model Blocked {
+  id        Int   @id @default(autoincrement())
+  user      User  @relation("Blocked_users", fields: [userId], references: [id])
+  blocked   User  @relation("Blocked_blocked", fields: [blockedId], references: [id])
+  userId    Int
+  blockedId Int
+
+  @@unique([userId, blockedId])
 }

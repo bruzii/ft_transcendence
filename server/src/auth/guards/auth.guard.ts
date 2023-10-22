@@ -32,7 +32,14 @@ export class AuthGuardToken implements CanActivate {
                                 console.log("jtw 2");
                                 console.log("Create new token...")
                                 console.log(decoded);
-                                const newToken = this.authService.createToken({ userId: decoded.userId, email: decoded.email}, 'newToken');
+                                let email: string = null;
+                                let userId: number = null;
+                                if (typeof decoded !== "string"){
+                                    email = decoded.email;
+                                    userId = decoded.userId;
+                                }
+         
+                                const newToken = this.authService.createToken({ userId: userId, email: email}, 'newToken');
                                 response.cookie('token', newToken, {
                                     httpOnly: true,
                                     secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS

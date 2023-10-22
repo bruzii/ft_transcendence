@@ -1,26 +1,25 @@
-import { CreateUserInput } from './create-user.input';
-import { InputType, Field, Int, PartialType } from '@nestjs/graphql';
+import { InputType, Field, Int } from '@nestjs/graphql';
 
 @InputType()
-export class UpdateUserInput extends PartialType(CreateUserInput) {
-  @Field()
-  userName: string;
+export class UpdateUserInput {
+  @Field(() => Int)
+  id: number;
 
-  @Field()
-  intraId: number;
+  @Field({ nullable: true }) // Champ userName rendu non obligatoire
+  userName?: string;
 
-  @Field()
-  lastName: string;
+  @Field({ nullable: true }) // Champ lastName rendu non obligatoire
+  lastName?: string;
 
-  @Field()
-  firstName: string;
+  @Field({ nullable: true }) // Champ firstName rendu non obligatoire
+  firstName?: string;
 
-  @Field()
-  email: string;
+  @Field({ nullable: true }) // Champ TwoFa rendu non obligatoire
+  TwoFA?: boolean;
 
-  @Field()
-  createdAt: Date;
+  @Field({ nullable: true }) // Champ connected rendu non obligatoire
+  connected?: boolean;
 
-  @Field()
-  imgUrl: string;
+  @Field({ nullable: true }) // Champ avatar rendu non obligatoire
+  avatar?: string;
 }
