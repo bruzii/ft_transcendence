@@ -2,6 +2,17 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type ChatRoom {
+  admins: [User!]
+  bannedUsers: [User!]
+  createdAt: DateTime
+  id: Int
+  messages: [ID!]
+  mutedUsers: [User!]
+  name: String
+  users: [User!]
+}
+
 input CreateUserInput {
   email: String!
   firstName: String!
@@ -21,11 +32,24 @@ type Friend {
   userId: Int!
 }
 
+type Message {
+  chatRoom: ChatRoom
+  content: String
+  createdAt: DateTime!
+  id: Int!
+  user: User
+}
+
 type Mutation {
+  BanUserFromChatRoom(chatRoomId: Int!, userIdAdmin: Int!, userIdBan: Int!): String!
+  MuteUserFromChatRoom(chatRoomId: Int!, userIdAdmin: Int!, userIdMute: Int!): String!
   addFriend(email: String!, id: Int!): Friend!
   addLose(id: Int!): User!
+  addUserToChatRoom(chatRoomId: Int!, userId: [Int!]!): ChatRoom!
   addWin(id: Int!): User!
   addXP(id: Int!, xp: Int!): User!
+  createChatRoom(name: String!, userId: Int!): ChatRoom!
+  deleteChatRoom(chatRoomId: Int!, userId: Int!): String!
   removeFriend(id: Int!): Friend!
   removeUser(id: Int!): User!
   setOnline(id: Int!): User!
@@ -37,7 +61,11 @@ type Mutation {
 }
 
 type Query {
+  bannedUsersFromChatRoom(adminUserId: Int!, chatRoomId: Int!): [User!]!
   friend(id: Int!): Friend!
+  getAllMessagesFromChatRoom(chatRoomId: Int!): [Message!]!
+  getChatRoomsForUser(userId: Int!): [ChatRoom!]!
+  getMessagesForChatRoom(chatRoomId: Int!): [Message!]!
   userAll: [User!]!
   userOne(id: Int!): User!
 }
@@ -60,7 +88,7 @@ input UpdateUserInput {
 
 type User {
   TwoFA: Boolean!
-  avatar: String!
+  avatar: String
   connected: Boolean!
   createdAt: DateTime!
   email: String!
@@ -71,7 +99,7 @@ type User {
   lastName: String!
   lose: Float!
   twoFactorAuthenticationSecret: String!
-  userName: String!
+  userName: String
   win: Float!
   xp: Float!
 }

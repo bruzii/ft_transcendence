@@ -7,7 +7,7 @@ import { Request, Response, NextFunction } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  // app.enableCors();
+  app.enableCors();
   // app.use(cors());
   await app.listen(3000);
 }

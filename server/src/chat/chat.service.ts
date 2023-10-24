@@ -1,26 +1,314 @@
 import { Injectable } from '@nestjs/common';
 import { CreateChatDto } from './dto/create-chat.dto';
 import { UpdateChatDto } from './dto/update-chat.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { User } from 'src/user/entities/user.entity';
+import { Message } from './entities/chat.entity';
 
 @Injectable()
 export class ChatService {
-  create(createChatDto: CreateChatDto) {
-    return 'This action adds a new chat';
+  constructor(private prisma: PrismaService) {}
+
+  async isUserAdminOfChatRoom(chatRoomId: number, userId: number): Promise<boolean> {
+    console.log("chatRoomId : " + chatRoomId)
+    const chatRoom = await this.prisma.chatRoom.findUnique({
+      where: { id: chatRoomId },
+      select: {
+        admins: {
+          where: { id: userId },
+        },
+      },
+    });
+  
+    return chatRoom && chatRoom.admins.length > 0;
   }
 
-  findAll() {
-    return `This action returns all chat`;
+  async saveMessage(content: string, userId: number, chatRoomId: number): Promise<Message> {
+    return this.prisma.message.create({
+      data: {
+        content: content,
+        userId: userId,
+        chatRoomId: chatRoomId
+      }
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} chat`;
+  async getAllMessagesFromChatRoom(chatRoomId: number): Promise<Message[]> {
+    return await this.prisma.message.findMany({
+      where: { chatRoomId: chatRoomId },
+      include: {
+        user: true,
+      },
+    });
   }
 
-  update(id: number, updateChatDto: UpdateChatDto) {
-    return `This action updates a #${id} chat`;
+  async createChatRoom(name: string, userId: number) {
+    const existChatRoom = await this.prisma.chatRoom.findFirst({where: {name: name}});
+    if (existChatRoom) {
+      throw new Error("Chat room already exist");
+    }
+    return await this.prisma.chatRoom.create({
+      data: {
+        name: name,
+        users: {
+          connect: [{ id: userId }],
+        },
+        admins: {
+          connect: [{ id: userId }], // Ceci ajoute le créateur comme administrateur
+        },
+      },
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} chat`;
+  async addAdminToChatRoom(chatRoomId: number, userId: number, adminId: number) {
+    console.log("chatRoomId 11: " + chatRoomId) 
+    const existChatRoom = await this.prisma.chatRoom.findFirst({where: {id: chatRoomId}});
+    if (!existChatRoom) {
+      throw new Error("Chat room not found");
+    }
+    const existUser = await this.prisma.user.findFirst({where: {id: userId}});
+    if (!existUser) {
+      throw new Error("User not found");
+    }
+    const isAdmin = await this.isUserAdminOfChatRoom(chatRoomId, adminId);
+    const isUserAdmin = await this.isUserAdminOfChatRoom(chatRoomId, userId);
+    if (!isAdmin || isUserAdmin) {
+      throw new Error("User is already admin of this chat room or user is not Admin");
+    }
+
+    return await this.prisma.chatRoom.update({
+      where: {id: chatRoomId},
+      data: {
+        admins: {
+          connect: [{ id: userId }],
+        },
+      },
+    });
+  }
+
+  async addUserToChatRoom(chatRoomId: number, userId: number[]) {
+    console.log("chatRoomId 11: " + chatRoomId)
+    console.log("userId 11: " + userId)
+    const existChatRoom = await this.prisma.chatRoom.findFirst({where: {id: chatRoomId}});
+    if (!existChatRoom) {
+      throw new Error("Chat room not found");
+    }
+    return await this.prisma.chatRoom.update({
+      where: {id: chatRoomId},
+      data: {
+        users: {
+          connect: userId.map((id) => ({id: id})),
+        },
+      },
+      include: {
+        users: true,
+      },
+    });
+  }
+
+  async getChatRoom(id: number) {
+    return await this.prisma.chatRoom.findUnique({where: {id: id}});
+  }
+
+  async getChatRoomsForUser(userId: number) {
+    return await this.prisma.chatRoom.findMany({
+      where: {
+        AND: [
+          {
+            users: {
+              some: {
+                id: userId,
+              },
+            },
+          },
+          {
+            NOT: {
+              bannedUsers: {
+                some: {
+                  id: userId,
+                },
+              },
+            },
+          },
+        ],
+      },
+      include: {
+        users: {
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+        messages: {
+          take: 1,
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
+      },
+    });
+  }
+  
+  async  getBannedUsersFromChatRoom(chatRoomId: number, adminUserId: number): Promise<User[]> {
+    // Récupérez la salle de chat avec les utilisateurs bannis
+    const chatRoom = await this.prisma.chatRoom.findUnique({
+      where: { id: chatRoomId },
+      include: {
+        bannedUsers: true,
+        admins: true,
+      },
+    });
+
+    if (!chatRoom) {
+      throw new Error('ChatRoom not found');
+    }
+
+    // Vérifiez si l'utilisateur qui fait la demande est un administrateur
+    const isAdmin = chatRoom.admins.some(admin => admin.id === adminUserId);
+    if (!isAdmin) {
+      throw new Error('User is not an admin of the ChatRoom');
+    }
+
+    return chatRoom.bannedUsers;
+}
+
+  async banUserFromChatRoom(chatRoomId: number, userIdToBan: number, adminUserId: number): Promise<string> {
+    // Étape 1: Récupérez la salle de chat pour vérifier les détails
+    const chatRoom = await this.prisma.chatRoom.findUnique({
+      where: { id: chatRoomId },
+      include: {
+        users: true,
+        admins: true,
+        bannedUsers: true
+      },
+});
+
+    if (!chatRoom) {
+      throw new Error('ChatRoom not found');
+    }
+    console.log("chatRoom : " + chatRoom)
+    // Étape 2: Vérifiez si l'utilisateur à bannir fait partie de la ChatRoom
+    const isUserInChatRoom = chatRoom.users.some(user => user.id === userIdToBan);
+    if (!isUserInChatRoom) {
+      throw new Error('User is not part of the ChatRoom');
+    }
+
+    const isUserAlreadyBanned = chatRoom.bannedUsers.some(bannedUser => bannedUser.id === userIdToBan);
+    if (isUserAlreadyBanned) {
+    throw new Error('User is already banned from the ChatRoom');
+    }
+
+  
+    // Étape 3: Vérifiez si l'utilisateur qui effectue le bannissement est un administrateur
+    const isAdmin = chatRoom.admins.some(admin => admin.id === adminUserId);
+    if (!isAdmin) {
+      throw new Error('User is not an admin of the ChatRoom');
+    }
+  
+    // Étape 4: Bannir l'utilisateur
+    await this.prisma.chatRoom.update({
+      where: { id: chatRoomId },
+      data: {
+        bannedUsers: {
+          connect: { id: userIdToBan }
+        }
+      }
+    });
+    return "User has been banned from ChatRoom"
+  }
+  
+  async  muteUserInChatRoom(chatRoomId: number, userIdToMute: number, adminUserId: number): Promise<string> {
+    // Étape 1: Récupérez la salle de chat pour vérifier les détails
+    const chatRoom = await this.prisma.chatRoom.findUnique({
+      where: { id: chatRoomId },
+      include: {
+        users: true,
+        admins: true,
+      },
+    });
+  
+    if (!chatRoom) {
+      throw new Error('ChatRoom not found');
+    }
+  
+    // Étape 2: Vérifiez si l'utilisateur à mettre en sourdine fait partie de la ChatRoom
+    const isUserInChatRoom = chatRoom.users.some(user => user.id === userIdToMute);
+    if (!isUserInChatRoom) {
+      throw new Error('User is not part of the ChatRoom');
+    }
+  
+    // Étape 3: Vérifiez si l'utilisateur qui effectue l'action est un administrateur
+    const isAdmin = chatRoom.admins.some(admin => admin.id === adminUserId);
+    if (!isAdmin) {
+      throw new Error('User is not an admin of the ChatRoom');
+    }
+  
+    // Étape 4: Mettre l'utilisateur en sourdine
+    await this.prisma.chatRoom.update({
+      where: { id: chatRoomId },
+      data: {
+        mutedUsers: {
+          connect: { id: userIdToMute }
+        }
+      }
+    });
+  
+    return "User has been muted in ChatRoom";
+}
+
+
+  async sendMessage(userId: number, chatRoomId: number, message: string) {
+    const existChatRoom = await this.prisma.chatRoom.findFirst({where: {id: chatRoomId}});
+    if (!existChatRoom) {
+      throw new Error("Chat room not found");
+    }
+    return await this.prisma.message.create({
+      data: {
+        content: message,
+        chatRoomId: chatRoomId,
+        userId
+      },
+      include: {
+        chatRoom: {
+          include: {
+            users: true,
+          },
+        },
+        user: true,
+      }
+    });
+  }
+
+  async getMessagesFromChatRoom(chatRoomId: number) {
+    const existChatRoom = await this.prisma.chatRoom.findFirst({where: {id: chatRoomId}});
+    if (!existChatRoom) {
+      throw new Error("Chat room not found");
+    }
+    return await this.prisma.message.findMany({
+      where: {chatRoomId: chatRoomId},
+      include: {
+        chatRoom: {
+          include: {
+            users: {
+              orderBy: {
+                createdAt: 'desc',
+                }
+              }
+            },
+          },
+        user: true,
+        }
+    });
+  }
+
+  async deleteChatRoom(id: number, userId: number) {
+    const isAdmin = await this.isUserAdminOfChatRoom(id, userId);
+    if (!isAdmin) {
+      throw new Error("You are not admin of this chat room");
+    }
+    const existChatRoom = await this.prisma.chatRoom.findFirst({where: {id: id}});
+    if (!existChatRoom) {
+      throw new Error("Chat room not found");
+    }
+    return await this.prisma.chatRoom.delete({where: {id: id}});
   }
 }

@@ -1,6 +1,15 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateChatDto } from './create-chat.dto';
+import { IsNotEmpty, IsString, IsArray} from 'class-validator';
+import { InputType, Field } from '@nestjs/graphql';
 
-export class UpdateChatDto extends PartialType(CreateChatDto) {
-  id: number;
+@InputType()
+export class UpdateChatDto {
+    @Field()
+    @IsString()
+    @IsNotEmpty()
+    name: string;
+
+    @Field(() => [String])
+    userIds: string[];
+
+    
 }

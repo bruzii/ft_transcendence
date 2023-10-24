@@ -1,5 +1,6 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { Friend } from 'src/friend/entities/friend.entity';
+
 @ObjectType()
 export class User {
   @Field(() => Int)
@@ -11,11 +12,11 @@ export class User {
   @Field()
   firstName: string;
 
-  @Field()
-  userName: string;
+  @Field({ nullable: true})
+  userName?: string;
 
-  @Field()
-  avatar: string;
+  @Field({ nullable: true})
+  avatar?: string;
 
   @Field()
   connected: boolean;
@@ -42,7 +43,7 @@ export class User {
   TwoFA: boolean;
 
   @Field(() => [Friend], { nullable: true })
-  friends: Friend[];
+  friends?: Friend[];
 
   @Field()
   createdAt: Date;
