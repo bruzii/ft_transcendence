@@ -4,7 +4,7 @@ import { UpdateChatDto } from './dto/update-chat.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { User } from 'src/user/entities/user.entity';
 import { Message } from './entities/chat.entity';
-
+import { UpdateUserInput } from 'src/user/dto/update-user.input';
 @Injectable()
 export class ChatService {
   constructor(private prisma: PrismaService) {}
@@ -24,6 +24,7 @@ export class ChatService {
   }
 
   async saveMessage(content: string, userId: number, chatRoomId: number): Promise<Message> {
+    console.log("content : " + content)
     return this.prisma.message.create({
       data: {
         content: content,
@@ -33,32 +34,103 @@ export class ChatService {
     });
   }
 
+  async findOrCreatePrivateChatRoom(user1Id: number, user2Id: number): Promise<number> {
+    const chatRoom = await this.prisma.chatRoom.findFirst({
+      where: {
+        AND: [
+          { name: { startsWith: "private" } }, 
+          { users: { some: { id: user1Id } } },
+          { users: { some: { id: user2Id } } }
+        ]
+      }
+    });
+  
+    if (chatRoom) {
+      return chatRoom.id;
+    } else {
+      const newChatRoom = await this.prisma.chatRoom.create({
+        data: {
+          name: "private",
+          users: {
+            connect: [
+              { id: user1Id },
+              { id: user2Id }
+            ]
+          }
+        }
+      });
+      
+      // Step 2: Update the chat room name based on its generated ID
+      const updatedChatRoom = await this.prisma.chatRoom.update({
+        where: { id: newChatRoom.id },
+        data: {
+          name: `private_${newChatRoom.id}`
+        }
+      });
+  
+      return newChatRoom.id;
+    }
+  }
+  
   async getAllMessagesFromChatRoom(chatRoomId: number): Promise<Message[]> {
     return await this.prisma.message.findMany({
       where: { chatRoomId: chatRoomId },
       include: {
         user: true,
+        chatRoom: {
+          include: {
+            bannedUsers: true,
+            mutedUsers: true,
+            users: true,
+          }
+        },
       },
     });
+    
   }
 
-  async createChatRoom(name: string, userId: number) {
-    const existChatRoom = await this.prisma.chatRoom.findFirst({where: {name: name}});
-    if (existChatRoom) {
-      throw new Error("Chat room already exist");
-    }
-    return await this.prisma.chatRoom.create({
-      data: {
-        name: name,
-        users: {
-          connect: [{ id: userId }],
-        },
-        admins: {
-          connect: [{ id: userId }], // Ceci ajoute le créateur comme administrateur
-        },
-      },
+
+
+  async createChatRoom(userId: number, friends: UpdateUserInput[]) {
+    const usersToConnect = friends.map(friend => friend.id);
+    const allUsersInRoom = [...usersToConnect, userId];
+
+    // Find chat rooms that contain all the desired users
+    const potentialChatRooms = await this.prisma.chatRoom.findMany({
+        where: {
+            users: {
+                every: { id: { in: allUsersInRoom } }
+            }
+        }
     });
-  }
+
+    // Now, for each potential chat room, check if it has users that are not in our list
+    for (const chatRoom of potentialChatRooms) {
+        const chatRoomUsers = await this.prisma.user.findMany({
+            where: {
+                chatRooms: { some: { id: chatRoom.id } },
+                NOT: { id: { in: allUsersInRoom } }
+            }
+        });
+        if (chatRoomUsers.length === 0) { // Means this chat room only contains our users
+            return chatRoom;
+        }
+    }
+
+    // If no such chat room found, create a new one
+    return await this.prisma.chatRoom.create({
+        data: {
+            users: {
+                connect: allUsersInRoom.map(id => ({ id }))
+            },
+            admins: {
+                connect: [{ id: userId }],
+            },
+        },
+    });
+}
+
+
 
   async addAdminToChatRoom(chatRoomId: number, userId: number, adminId: number) {
     console.log("chatRoomId 11: " + chatRoomId) 
@@ -260,6 +332,38 @@ export class ChatService {
     const existChatRoom = await this.prisma.chatRoom.findFirst({where: {id: chatRoomId}});
     if (!existChatRoom) {
       throw new Error("Chat room not found");
+    }
+    return await this.prisma.message.create({
+      data: {
+        content: message,
+        chatRoomId: chatRoomId,
+        userId
+      },
+      include: {
+        chatRoom: {
+          include: {
+            users: true,
+          },
+        },
+        user: true,
+      }
+    });
+  }
+
+  async sendMessageToUser(userId: number, chatRoomId: number, message: string, userToId: number) {
+    const existChatRoom = await this.prisma.chatRoom.findFirst({where: {id: chatRoomId}});
+    if (!existChatRoom) {
+        await this.prisma.chatRoom.create({
+          data: {
+            name: "Dual Room",
+            users: {
+              connect: [{ id: userId }, { id: userToId }],
+            },
+            admins: {
+              connect: [{ id: userId }], // Ceci ajoute le créateur comme administrateur
+            },
+          },
+        });
     }
     return await this.prisma.message.create({
       data: {

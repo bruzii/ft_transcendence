@@ -2,7 +2,7 @@ import { Context, Mutation, Resolver, Query, Int } from "@nestjs/graphql";
 import { ChatService } from "./chat.service";
 import { Request } from "express";
 import { UserService } from "src/user/user.service";
-import { UseGuards } from "@nestjs/common";
+import { UpdateUserInput } from 'src/user/dto/update-user.input';
 import { ChatRoom, Message, UserTyping, UserStoppedTyping } from "./entities/chat.entity";
 import { Args } from "@nestjs/graphql"
 import { User } from "src/user/entities/user.entity";
@@ -16,11 +16,11 @@ export class ChatResolver {
 
     @Mutation(() => ChatRoom)
     async createChatRoom(
-        @Args('name') name: string,
         @Args('userId', { type: () => Int }) userId: number,
+        @Args('friends', { type: () => [UpdateUserInput] }) friends: UpdateUserInput[],
         @Context() context: { req: Request }) {
             console.log(context.req.user);
-      return this.chatService.createChatRoom(name, userId); // METTRE context.req.user.id a la place de 3 mais ca marche pas
+      return this.chatService.createChatRoom(userId, friends); // METTRE context.req.user.id a la place de 3 mais ca marche pas
     }
 
     @Mutation(() => ChatRoom)
@@ -45,6 +45,7 @@ export class ChatResolver {
         @Args('userIdAdmin', { type: () => Int }) userIdAdmin: number) {
     return await this.chatService.muteUserInChatRoom(chatRoomId, userId, userIdAdmin);
     }
+
 
     @Query(() => [ChatRoom])
     async getChatRoomsForUser(

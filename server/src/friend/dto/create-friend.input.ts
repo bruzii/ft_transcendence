@@ -1,4 +1,5 @@
 import { InputType, Int, Field } from '@nestjs/graphql';
+import { User } from 'src/user/entities/user.entity';
 
 @InputType()
 export class CreateFriendInput {
@@ -8,4 +9,6 @@ export class CreateFriendInput {
   @Field(() => Int)
   friendId: number;
 
+  // @Field(() => User, { nullable: true } )
+  // friend?: User;
 }

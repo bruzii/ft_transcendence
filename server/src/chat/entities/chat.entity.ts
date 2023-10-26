@@ -12,6 +12,9 @@ export class ChatRoom {
     @Field({ nullable: true })
     createdAt?: Date;
 
+    @Field(() => String, { nullable: true })
+    password?: string;
+    
     @Field(() => [User], { nullable: true })
     admins?: User[];
 
@@ -20,11 +23,11 @@ export class ChatRoom {
 
     @Field(() => [User], { nullable: true })
     mutedUsers: User[];
-    
+
     @Field(() => [User], { nullable: true })
     users?: User[];
 
-    @Field(() => [ID], { nullable: true })
+    @Field(() => [Message], { nullable: true })
     messages?: Message[];
 }
 

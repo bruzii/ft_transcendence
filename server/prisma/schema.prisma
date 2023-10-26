@@ -38,7 +38,7 @@ model User {
 
 model ChatRoom {
   id        Int       @id @default(autoincrement())
-  name      String
+  name      String?
   password  String?
   createdAt DateTime  @default(now())
   messages  Message[]

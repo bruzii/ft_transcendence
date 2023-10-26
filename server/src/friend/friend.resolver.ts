@@ -3,7 +3,7 @@ import { FriendService } from './friend.service';
 import { Friend } from './entities/friend.entity';
 import { CreateFriendInput } from './dto/create-friend.input';
 import { UpdateFriendInput } from './dto/update-friend.input';
-
+import { User } from 'src/user/entities/user.entity';
 @Resolver(() => Friend)
 export class FriendResolver {
   constructor(private readonly friendService: FriendService) {}
@@ -18,6 +18,10 @@ export class FriendResolver {
     return this.friendService.findAll();
   }
 
+  @Query(() => [User], { name: 'friendByUserId' })
+  findFriendsByUserId(@Args('userId', { type: () => Int }) userId: number) {
+    return this.friendService.findFriendsByUserId(userId);
+  }
   @Query(() => Friend, { name: 'friend' })
   findOne(@Args('id', { type: () => Int }) id: number) {
     return this.friendService.findOne(id);

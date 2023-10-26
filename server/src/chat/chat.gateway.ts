@@ -38,16 +38,38 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     //#region message
-    @SubscribeMessage('message::add')
-    async newMessage(sender: Socket, message: any) {
+    @SubscribeMessage('message::group:add')
+    async newMessageGroup(sender: Socket, message: any) {
         console.log(message)
         const messDate = new Date(message.timestamp);
         console.log(`Client ${message.userId} send a message to channel ${message.chan} at ${messDate.toDateString()}`);
         
         this.chatService.saveMessage(message.message, message.userId, message.roomId);
       
-        this.server.to(`channel_${message.roomId}`).emit('message::receive::add', message.message);
+        this.server.to(`channel_${message.roomId}`).emit('message::receive::group::add', message.message);
     }
+
+    @SubscribeMessage('message::user:add')
+    async newMessageUser(sender: Socket, message: any) {
+      console.log(message);
+      console.log("message : " + message.content)
+      const messDate = new Date(message.timestamp);
+      console.log(`Client ${message.userId} send a message to channel ${message.roomId} at ${messDate.toDateString()}`);
+    
+      // Ensure the chat room exists between the sender and the recipient
+      // const roomId = await this.chatService.findOrCreatePrivateChatRoom(message.userId, message.userToId); // Assuming you pass the recipientId in your message object.
+    
+      // console.log("roomId : " + roomId)
+      // Save the message
+
+      this.chatService.saveMessage(message.content, message.userId, message.roomId);
+      const user = await this.userService.findOne(message.userId);
+      message.user = user;
+      // Emit the message to the chat room
+      console.log(`channel_${message.roomId}`)
+      this.server.to(`channel_${message.roomId}`).emit('message::receive::user::add', message);
+    }
+    
     //#endregion
 
     //#region admin events

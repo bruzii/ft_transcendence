@@ -19,6 +19,28 @@ export class FriendService {
     return this.prisma.friend.findMany();
   }
 
+  async findFriendsByUserId(userId: number) {
+    const userWithFriends = await this.prisma.user.findUnique({
+        where: {
+            id: userId
+        },
+        include: {
+            friends: {
+                include: {
+                    friend: true // Cela inclura les détails de l'ami.
+                }
+            }
+        }
+    });
+
+    // Ici, nous avons les amis sous userWithFriends.friends
+    // Pour obtenir une liste propre des amis:
+    const friendsList = userWithFriends?.friends.map(friendship => friendship.friend);
+    console.log(friendsList);
+    return friendsList;
+}
+
+
   async findOne(id: number) {
     // Utilisez le client Prisma pour récupérer un ami par son ID
     return this.prisma.friend.findUnique({
