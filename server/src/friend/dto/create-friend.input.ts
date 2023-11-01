@@ -9,6 +9,12 @@ export class CreateFriendInput {
   @Field(() => Int)
   friendId: number;
 
+  @Field(() => Boolean, { nullable: true } )
+  accepted?: boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  pending?: boolean;
+
   // @Field(() => User, { nullable: true } )
   // friend?: User;
 }

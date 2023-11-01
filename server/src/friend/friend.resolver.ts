@@ -22,6 +22,11 @@ export class FriendResolver {
   findFriendsByUserId(@Args('userId', { type: () => Int }) userId: number) {
     return this.friendService.findFriendsByUserId(userId);
   }
+
+  @Query(() => [User], { name: 'getFriendPrending' })
+  findFriendPending(@Args('userId', { type: () => Int }) friendId: number) {
+    return this.friendService.findUserPending(friendId);
+  }
   @Query(() => Friend, { name: 'friend' })
   findOne(@Args('id', { type: () => Int }) id: number) {
     return this.friendService.findOne(id);

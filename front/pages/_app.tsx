@@ -11,7 +11,7 @@ import { MainContainer } from "../themes/styles";
 import { ThemeContext, TokenContext, MyCustomTheme, RoleContext, RoleType } from "../context";
 import { determineRole } from "../helpers/helpers";
 import jwt_decode from 'jwt-decode';
-import { FormProvider } from "../context/formContext";
+import { UserInfoProvider } from "../context/userContext";
 import { useRouter } from "next/router";
 import { ApolloProvider } from '@apollo/client';
 import client from "../Apollo";
@@ -109,7 +109,7 @@ export default function App({ Component, pageProps }: AppProps) {
           <ThemeContext.Provider value={{ setTheme, theme }}>
               <ThemeProvider theme={themeStyle}>
                   <GlobalStyle />
-                  <FormProvider>
+                  <UserInfoProvider>
                     <MofifSettingProvider>
                   <MainContainer bool={Token === null}>
                    <Sidebar/>
@@ -117,7 +117,7 @@ export default function App({ Component, pageProps }: AppProps) {
                    {/* {loading || isLoading || (Role === null && (!router.pathname.includes("/login") && !router.pathname.includes("/register") && !router.pathname.includes("/otp") )) ? <div><Loader/></div> :<Component {...pageProps}/> } */}
                   </MainContainer>
                   </MofifSettingProvider>
-                  </FormProvider>
+                  </UserInfoProvider>
               </ThemeProvider>
             </ThemeContext.Provider>
           </RoleContext.Provider>

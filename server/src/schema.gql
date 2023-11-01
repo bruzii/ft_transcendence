@@ -27,10 +27,26 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 scalar DateTime
 
 type Friend {
+  accepted: Boolean
   friend: User
   friendId: Int!
   id: Int!
+  pending: Boolean!
   userId: Int!
+}
+
+type Game {
+  endedAt: DateTime
+  id: Int
+  player1: User
+  player1Id: Int
+  player2: User
+  player2Id: Int
+  scorePlayer1: Int
+  scorePlayer2: Int
+  startedAt: DateTime
+  winner: User
+  winnerId: Int
 }
 
 type Message {
@@ -44,7 +60,7 @@ type Message {
 type Mutation {
   BanUserFromChatRoom(chatRoomId: Int!, userIdAdmin: Int!, userIdBan: Int!): String!
   MuteUserFromChatRoom(chatRoomId: Int!, userIdAdmin: Int!, userIdMute: Int!): String!
-  addFriend(email: String!, id: Int!): Friend!
+  addFriend(friendId: Float!, id: Int!): Friend!
   addLose(id: Int!): User!
   addUserToChatRoom(chatRoomId: Int!, userId: [Int!]!): ChatRoom!
   addWin(id: Int!): User!
@@ -52,12 +68,14 @@ type Mutation {
   createChatRoom(friends: [UpdateUserInput!]!, userId: Int!): ChatRoom!
   deleteChatRoom(chatRoomId: Int!, userId: Int!): String!
   removeFriend(id: Int!): Friend!
+  removeGame(id: Int!): Game!
   removeUser(id: Int!): User!
   setOnline(id: Int!): User!
   signUp(createUserInput: CreateUserInput!): User!
-  suppFriend(email: String!, id: Int!): Friend!
+  suppFriend(friendId: Float!, id: Int!): Friend!
   suppXP(id: Int!, xp: Int!): User!
   updateFriend(updateFriendInput: UpdateFriendInput!): Friend!
+  updateGame(updateGameInput: UpdateGameInput!): Game!
   updateUser(updateUserInput: UpdateUserInput!): User!
 }
 
@@ -65,17 +83,27 @@ type Query {
   bannedUsersFromChatRoom(adminUserId: Int!, chatRoomId: Int!): [User!]!
   friend(id: Int!): Friend!
   friendByUserId(userId: Int!): [User!]!
-  getAllMessagesFromChatRoom(chatRoomId: Int!): [Message!]!
+  game(id: Int!): Game!
+  getAllMessagesFromChatRoom(chatRoomId: Int!, password: String): [Message!]!
   getChatRoomsForUser(userId: Int!): [ChatRoom!]!
+  getFriendPrending(userId: Int!): [User!]!
   getMessagesForChatRoom(chatRoomId: Int!): [Message!]!
   userAll: [User!]!
   userOne(id: Int!): User!
 }
 
 input UpdateFriendInput {
-  friendId: Int
+  accepted: Boolean
+  friendId: Int!
+  id: Int
+  pending: Boolean
+  userId: Int!
+}
+
+input UpdateGameInput {
+  """Example field (placeholder)"""
+  exampleField: Int
   id: Int!
-  userId: Int
 }
 
 input UpdateUserInput {

@@ -7,7 +7,7 @@ import styled from "styled-components";
 import { DecodedToken } from "../../constants/types";
 import { P } from "../../themes/styles";
 import Accordion from './accordeon';
-
+import AddFriends from '../../components/friend/addFriends';
   
   type AccordionItemProps = {
     eventName: string;
@@ -56,6 +56,7 @@ const History = () => {
         <Box>
             <Title>historique des événements</Title>
             {/* <Accordion Data={Data} /> */}
+            <AddFriends />
         </Box>
     </Container>
     )

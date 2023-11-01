@@ -20,7 +20,7 @@ export class AuthController {
 
 
   @Get('users')
-  // @UseGuards(AuthGuardToken)
+  @UseGuards(AuthGuardToken)
   findAll() {
     return this.authService.findAll();
   }
@@ -40,7 +40,9 @@ export class AuthController {
         console.log(res.status)
         const test = await this.userService.setOnline(user.id);
         console.log("user apres connected : " + test.connected);
-        res.status(200).send(user);
+        // res.status(200).send(user);
+        const frontendRedirectUrl = `http://localhost:3001/`; 
+        res.redirect(frontendRedirectUrl);
         return {
           user: user,
           token: token,

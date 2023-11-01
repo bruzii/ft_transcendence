@@ -9,3 +9,14 @@ export const GET_FRIENDS = gql`
         }
     }
 `;
+
+
+export const GET_FRIENDS_PENDING = gql`
+    query getFriendPrending($userId: Int!) {
+        getFriendPrending(userId: $userId) {
+            lastName
+            firstName
+            id
+        }
+    }
+`;

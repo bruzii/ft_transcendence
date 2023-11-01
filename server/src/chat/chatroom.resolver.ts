@@ -6,6 +6,7 @@ import { UpdateUserInput } from 'src/user/dto/update-user.input';
 import { ChatRoom, Message, UserTyping, UserStoppedTyping } from "./entities/chat.entity";
 import { Args } from "@nestjs/graphql"
 import { User } from "src/user/entities/user.entity";
+import * as bcrypt from 'bcrypt';
 
 @Resolver()
 export class ChatResolver {
@@ -63,9 +64,12 @@ export class ChatResolver {
 
     @Query(() => [Message])
     async getAllMessagesFromChatRoom(
-        @Args('chatRoomId', { type: () => Int }) chatRoomId: number) {
-      return this.chatService.getAllMessagesFromChatRoom(chatRoomId);
+        @Args('chatRoomId', { type: () => Int }) chatRoomId: number,
+        @Args('password', { type: () => String, nullable: true }) password?: string
+    ) {
+      return this.chatService.getAllMessagesFromChatRoom(chatRoomId, password);
     }
+    
     
     @Query(() => [Message])
     async getMessagesForChatRoom(

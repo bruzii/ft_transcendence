@@ -5,9 +5,8 @@ import { useQuery } from "@apollo/client"
 import { DELETE_CHATROOM, ADD_USER_TO_CHATROOM, CREATE_CHATROOM} from "../../Apollo/mutations/chat"
 import ChatRoom from "./live-chat"
 import ChatRoomPage from "../../components/chat/chatRoomPage"
-import io from 'socket.io-client';
 import toast, { Toaster } from "react-hot-toast";
-import { MessageProps } from "../../constants/types"
+import { useUserInfoState } from "../../context/userContext"
 type RoomProps = {
     name: string;
     messages: {
@@ -19,15 +18,14 @@ type RoomProps = {
 
 
 const ChatRoom2 = () => {
-    const [userId, setUserId] = useState<number | null>(1)
-    const [socket] = useState(() => io('http://localhost:3000'));  // Assurez-vous de remplacer par l'adresse de votre serveur si elle est différente.
+    const { id: userId, socket} = useUserInfoState();
     const [activeRoom, setChatRoomId] = useState<number | null>(null)
     const [chatRooms, setChatRooms] = useState<RoomProps[]>([])
     const [messages, setMessages] = useState([]);
     const [currentMessage, setCurrentMessage] = useState('');
     const [event, setEvent] = useState('');
     const { loading, error, data } = useQuery(GET_CHATROOMS_FOR_USER, {
-        variables: { userId: 1 }, // Remplacez 1 par la valeur souhaitée
+        variables: { userId: userId}, // Remplacez 1 par la valeur souhaitée
       });
       
     console.log(JSON.stringify(error, null, 2));
@@ -35,7 +33,7 @@ const ChatRoom2 = () => {
     const [deleteChatRoomMutation, {loading: mutationLoading, error: mutationError, data: mutationData}] = useMutation(DELETE_CHATROOM, {
         refetchQueries: [{
             query: GET_CHATROOMS_FOR_USER,
-            variables: {userId: 1}
+            variables: {userId: userId}
         }]
     })
     
@@ -127,7 +125,7 @@ const ChatRoom2 = () => {
                 },
                 refetchQueries: [{
                     query: GET_CHATROOMS_FOR_USER,
-                    variables: {userId: 1}
+                    variables: {userId: userId}
                 }]
             })
             console.log("data ", data)

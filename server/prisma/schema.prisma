@@ -31,9 +31,41 @@ model User {
   friends                       Friend[]   @relation("Friend_users")
   messages                      Message[]
   chatRooms                     ChatRoom[] @relation("chatroomUser")
-  adminInChatRooms     ChatRoom[]  @relation("chatroomAdmin")
-  bannedInChatRooms    ChatRoom[]  @relation("chatroomBannedUsers")
-  mutedInChatRooms     ChatRoom[]  @relation("chatroomMutedUsers")
+  adminInChatRooms              ChatRoom[]  @relation("chatroomAdmin")
+  bannedInChatRooms           ChatRoom[]  @relation("chatroomBannedUsers")
+  mutedInChatRooms            ChatRoom[]  @relation("chatroomMutedUsers")
+  gamesAsPlayer1              Game[] @relation("Player1ToGame")
+  gamesAsPlayer2              Game[] @relation("Player2ToGame")
+  gamesWon                    Game[] @relation("WinnerToGame")
+}
+
+model Game {
+  id        Int      @id @default(autoincrement())
+  player1Id Int
+  player2Id Int
+  waiting    Boolean @default(true)
+  scorePlayer1 Int @default(0)
+  scorePlayer2 Int @default(0)
+  waitingForPlayer  Boolean? @default(true)
+  startedAt  DateTime   @default(now())
+  endedAt    DateTime?
+  winnerId   Int?
+
+  player1    User @relation("Player1ToGame", fields: [player1Id], references: [id])
+  player2    User @relation("Player2ToGame", fields: [player2Id], references: [id])
+  winner     User? @relation("WinnerToGame", fields: [winnerId], references: [id])
+}
+
+enum GameStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
 }
 
 model ChatRoom {
@@ -63,6 +95,8 @@ model Friend {
   id       Int  @id @default(autoincrement())
   userId   Int
   friendId Int
+  pending  Boolean?   @default(true)
+  accepted Boolean?  
   friend   User @relation("Friend_friends", fields: [friendId], references: [id])
   user     User @relation("Friend_users", fields: [userId], references: [id])
 

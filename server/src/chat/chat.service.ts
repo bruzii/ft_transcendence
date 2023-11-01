@@ -5,6 +5,8 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { User } from 'src/user/entities/user.entity';
 import { Message } from './entities/chat.entity';
 import { UpdateUserInput } from 'src/user/dto/update-user.input';
+import * as bcrypt from 'bcrypt';
+
 @Injectable()
 export class ChatService {
   constructor(private prisma: PrismaService) {}
@@ -72,7 +74,25 @@ export class ChatService {
     }
   }
   
-  async getAllMessagesFromChatRoom(chatRoomId: number): Promise<Message[]> {
+
+  async getAllMessagesFromChatRoom(chatRoomId: number, password?: string): Promise<Message[]> {
+    console.log("password : " + password)
+    const chatRoom = await this.prisma.chatRoom.findUnique({
+      where: { id: chatRoomId },
+    });
+  
+    if (chatRoom && chatRoom.password) {
+      if (!password) {
+        throw new Error('Un mot de passe est requis pour accéder à ce chatRoom.');
+      }
+  
+      const isPasswordValid = await bcrypt.compare(password, chatRoom.password);
+  
+      if (!isPasswordValid) {
+        throw new Error('Mot de passe incorrect.');
+      }
+    }
+  
     return await this.prisma.message.findMany({
       where: { chatRoomId: chatRoomId },
       include: {
@@ -86,33 +106,51 @@ export class ChatService {
         },
       },
     });
-    
+  }
+  
+
+  async updateChatRoom(id: number, adminId: number ,updateChatDto: UpdateChatDto) {
+    return await this.prisma.chatRoom.update({
+      where: {id: id},
+      data: updateChatDto,
+    });
   }
 
+  async setPasswd(id: number, adminId: number ,passwd: string) {
+    const isAdmin = await this.isUserAdminOfChatRoom(id, adminId);
+    if (!isAdmin) {
+      throw new Error("You are not admin of this chat room");
+    }
+  
 
+    const saltRounds = 10; 
+    const hashedPassword = await bcrypt.hash(passwd, saltRounds);
+  
+    return await this.prisma.chatRoom.update({
+      where: {id: id},
+      data: {password: hashedPassword},
+    });
+  }
 
   async createChatRoom(userId: number, friends: UpdateUserInput[]) {
     const usersToConnect = friends.map(friend => friend.id);
     const allUsersInRoom = [...usersToConnect, userId];
 
-    // Find chat rooms that contain all the desired users
+    // Sorting the user IDs for consistent comparison
+    const sortedAllUsersInRoom = [...allUsersInRoom].sort((a, b) => a - b);
+
     const potentialChatRooms = await this.prisma.chatRoom.findMany({
-        where: {
-            users: {
-                every: { id: { in: allUsersInRoom } }
-            }
+        include: {
+            users: true
         }
     });
 
-    // Now, for each potential chat room, check if it has users that are not in our list
     for (const chatRoom of potentialChatRooms) {
-        const chatRoomUsers = await this.prisma.user.findMany({
-            where: {
-                chatRooms: { some: { id: chatRoom.id } },
-                NOT: { id: { in: allUsersInRoom } }
-            }
-        });
-        if (chatRoomUsers.length === 0) { // Means this chat room only contains our users
+        // Extract user IDs from the chatRoom and sort them
+        const sortedChatRoomUserIds = chatRoom.users.map(u => u.id).sort((a, b) => a - b);
+
+        // Compare the sorted arrays
+        if (JSON.stringify(sortedChatRoomUserIds) === JSON.stringify(sortedAllUsersInRoom)) {
             return chatRoom;
         }
     }
@@ -129,6 +167,8 @@ export class ChatService {
         },
     });
 }
+
+
 
 
 
@@ -160,7 +200,7 @@ export class ChatService {
 
   async addUserToChatRoom(chatRoomId: number, userId: number[]) {
     console.log("chatRoomId 11: " + chatRoomId)
-    console.log("userId 11: " + userId)
+    console.log("userId 11: " + JSON.stringify(userId))
     const existChatRoom = await this.prisma.chatRoom.findFirst({where: {id: chatRoomId}});
     if (!existChatRoom) {
       throw new Error("Chat room not found");
@@ -183,6 +223,7 @@ export class ChatService {
   }
 
   async getChatRoomsForUser(userId: number) {
+    console.log("userId : " + userId)
     return await this.prisma.chatRoom.findMany({
       where: {
         AND: [
@@ -327,6 +368,34 @@ export class ChatService {
     return "User has been muted in ChatRoom";
 }
 
+  async unMutedUserInChatRoom(chatRoomId: number, userIdToUnMute: number, adminUserId: number): Promise<string> {
+    // Étape 1: Récupérez la salle de chat pour vérifier les détails
+    const chatRoom = await this.prisma.chatRoom.findUnique({
+      where: { id: chatRoomId },
+      include: {
+        users: true,
+        admins: true,
+      },
+    });
+    if (!chatRoom) {
+      throw new Error('ChatRoom not found');
+    }
+    const isAdmin = chatRoom.admins.some(admin => admin.id === adminUserId);
+    if (!isAdmin) {
+      throw new Error('User is not an admin of the ChatRoom');
+    }
+    await this.prisma.chatRoom.update({
+
+      where: { id: chatRoomId },
+      data: {
+        mutedUsers: {
+          disconnect: { id: userIdToUnMute }
+        }
+      }
+    });
+    return "User has been unmuted in ChatRoom";
+  }
+
 
   async sendMessage(userId: number, chatRoomId: number, message: string) {
     const existChatRoom = await this.prisma.chatRoom.findFirst({where: {id: chatRoomId}});
@@ -401,6 +470,37 @@ export class ChatService {
           },
         user: true,
         }
+    });
+  }
+
+  async removeUserFromChatRoom(chatRoomId: number, userId: number, adminId: number) {
+    console.log("adminId : " + adminId)
+    const chatRoom = await this.prisma.chatRoom.findUnique({
+      where: { id: chatRoomId },
+      include: {
+        users: true,
+        admins: true,
+      },
+    });
+    if (!chatRoom) {
+      throw new Error("Chat room not found");
+    }
+
+    const isAdmin = chatRoom.admins.some(admin => admin.id === adminId);
+    if (!isAdmin) {
+      throw new Error('User is not an admin of the ChatRoom');
+    }
+    const isUserAdmin = chatRoom.admins.some(admin => admin.id === userId);
+    if (isUserAdmin) {
+      throw new Error('User is admin of the ChatRoom');
+    }
+    return await this.prisma.chatRoom.update({
+      where: {id: chatRoomId},
+      data: {
+        users: {
+          disconnect: [{id: userId}],
+        },
+      },
     });
   }
 

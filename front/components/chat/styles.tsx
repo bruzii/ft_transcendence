@@ -12,10 +12,10 @@ export const PopupContainer = styled.div`
     padding: 20px;
     transform: translate(-50%, -50%);
     background: #fff;
-    z-index: 100;
+    z-index: 30;
 `;
 
-const HeaderPopup = styled.div`
+export const HeaderPopup = styled.div`
     display: flex;
     flex: 0 0 auto;
     height: auto;   /* ou une hauteur spécifique si vous le souhaitez */
@@ -23,7 +23,7 @@ const HeaderPopup = styled.div`
     justify-content: space-between;
 `;
 
-const UserChoicePopup = styled.div`
+export const UserChoicePopup = styled.div`
     display: flex;
     flex: 1;
     max-height: 50vh;
@@ -36,7 +36,7 @@ const UserChoicePopup = styled.div`
     }
 `;
 
-const User = styled.p`
+export const User = styled.p`
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -48,7 +48,7 @@ const User = styled.p`
 `;
 
 
-const Container = styled.div`
+export const Container = styled.div`
 display: flex;
 position: relative;
 flex-direction: row;
@@ -59,7 +59,7 @@ color: #000;
 background: rgba(255, 255, 255, 0.50);
 `;
 
-const ChatContainer = styled.div`
+export const ChatContainer = styled.div`
 display: flex;
 flex-direction: column;
 width: 35%;
@@ -70,7 +70,7 @@ color: #000;
 background: rgba(255, 255, 255, 0.50);
 `;
 
-const ActionContainer = styled.div`
+export const ActionContainer = styled.div`
 display: flex;
 flex-direction: column;
 width: 65%;
@@ -83,7 +83,7 @@ border-left: 1px solid #000;
 background: rgba(255, 255, 255, 0.50);
 `;
 
-const HeaderRoom = styled.div`
+export const HeaderRoom = styled.div`
 display: flex;
 flex-direction: column;
 width: 100%;
@@ -100,7 +100,7 @@ background: rgba(255, 255, 255, 0.50);
 }
 `;
 
-const Title = styled.h1`
+export const Title = styled.h1`
 display: flex;
 justify-content: space-around;
 color: #000;
@@ -115,7 +115,7 @@ letter-spacing: 1.2px;
 text-transform: uppercase;
 `;
 
-const MessageHeaher = styled.div`
+export const MessageHeaher = styled.div`
 display: flex;
 flex-direction: column;
 

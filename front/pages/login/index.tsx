@@ -21,7 +21,7 @@ import { Label2 } from "../../themes/styles";
 import { useMutation } from "@apollo/client";
 import { LOGIN_USER } from "../../Apollo/mutations/user";
 import { InputContainer } from "../../themes/styles";
-import { useFormState } from "../../context/formContext";
+import { useFormState } from "../../context/userContext";
 import { useRouter } from "next/router";
 import LoadingWidget from "../loading";
 import { ResetPasswordProvider } from "../../context/resetPassword";
@@ -166,33 +166,38 @@ const Login = () => {
   const Role = useContext(RoleContext);
   const router = useRouter();
 
-  const OnSubmit = async (e: any) => {
+  // const OnSubmit = async (e : any) => {
+  //   e.preventDefault();
+  //   try {
+  //     const response = await axios.get('http://localhost:3000/auth');
+  //     if (response.status === 200) {
+  //       const { user, token } = response.data;
+  //       localStorage.setItem("token", token);
+  //       // Stockez d'autres données si nécessaire
+  //       toast.success(<b>Login Successfully!</b>, {
+  //         duration: 700,
+  //         ariaProps: {
+  //           role: 'status',
+  //           'aria-live': 'polite',
+  //         },
+  //       });
+  //       setTimeout(() => {
+  //         Router.push("/");
+  //       }, 750);
+  //     } else {
+  //       // Traitez les réponses non 200 ici
+  //       toast.error(<b>An error occurred during login!</b>);
+  //     }
+  //   } catch (error) {
+  //     console.error(error);
+  //     toast.error(<b>Password or Email Not Match!</b>);
+  //   }
+  // };
+  const OnSubmit = (e: any) => {
     e.preventDefault();
-      try {
-        const { data} = await axios.get('http://localhost:3000/auth', {
-          headers: {
-            'Content-Type': 'application/json', 
-          },
-        });
-        // let { token, id, role } = data.LoginUser;
-        // localStorage.setItem("token", token);
-        // Role?.setRole(determineRole(role));
-        // console.log(data); // Données renvoyées par la mutation
-        toast.success(<b>Login Successfully!</b>, {
-          duration: 700,
-          ariaProps: {
-            role: 'status',
-            'aria-live': 'polite',
-          },
-        });
-           setTimeout(() => {
-          Router.push("/");
-      }, 750);
-      } catch (error) {
-        console.error(error);
-        toast.error(<b>Password or Email Not Match!</b>);
-      }
-  };
+    window.location.href = 'http://localhost:3000/auth';
+};
+
 
   //console.log(state)
   return (

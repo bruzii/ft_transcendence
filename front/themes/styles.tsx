@@ -86,7 +86,7 @@ export const Title = styled.h1`
   letter-spacing: 1.2px;
   text-transform: uppercase;
 `
-export const Container = styled.div<{margin: number}>`
+export const Container = styled.div<{margin?: number}>`
     display: flex;
     position: relative;
     width: 100%;
@@ -97,6 +97,11 @@ export const Container = styled.div<{margin: number}>`
     margin-left:${(props) => props.margin}px;
     /* display: inline-block; //m */
     gap : 100px;
+    padding: 150px 100px 50px 240px;
+    padding-right: 10px;
+    @media screen and (max-width: 900px){
+      padding: 10px;
+  }
 `
 
 export const Label = styled.label`
@@ -139,15 +144,19 @@ export const Button = styled.button`
 
 export const Box = styled.div`
   display: flex;
-  width: fit-content;
+  width: 100%;
   flex-direction: column;
   align-items:center;
   padding: 30px;
+  height: 100%; 
   border-radius: 43px;
   background: rgba(255, 255, 255, 0.50);
   box-shadow: 0px 4px 30px 0px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(5px);
   gap: 25px;
+  @media screen and (min-width: 900px){
+    padding-left: 0px;
+}
 `
 export const InputLabel = styled.span<{Validate: boolean, touch: boolean}>`
   position: absolute;
@@ -169,7 +178,6 @@ export const InputLabel = styled.span<{Validate: boolean, touch: boolean}>`
   }
 
 `;
-
 export const Label2 = styled.label`
 font-size: 0.75rem;
   color: #8B8E98;

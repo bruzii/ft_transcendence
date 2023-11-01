@@ -28,10 +28,10 @@ const errorLink = onError(({ operation, graphQLErrors, networkError }) => {
 const httpLink = new HttpLink({
   uri: "http://localhost:3000/graphql",
   headers: {
-    // credentials: "include",
+    credentials: "include",
     mode: "cors",
   },
-  // credentials: "include",
+  credentials: "include",
 });
 
 const client = new ApolloClient({

@@ -1,8 +1,8 @@
 import { gql } from '@apollo/client';
 
 export const GET_MESSAGES_FOR_CHATROOM = gql`
-  query getAllMessagesFromChatRoom($chatRoomId: Int!) {
-    getAllMessagesFromChatRoom(chatRoomId: $chatRoomId) {
+  query getAllMessagesFromChatRoom($chatRoomId: Int!, $password: String) {
+    getAllMessagesFromChatRoom(chatRoomId: $chatRoomId, password: $password) {
     id
     content
     createdAt
@@ -10,6 +10,7 @@ export const GET_MESSAGES_FOR_CHATROOM = gql`
       firstName
       lastName
       email
+      id
     }
     chatRoom {
         id
@@ -21,17 +22,19 @@ export const GET_MESSAGES_FOR_CHATROOM = gql`
             lastName
             email
         }
+        mutedUsers{
+          id
+      }
     }
   }
 }
 `;
-
 export const GET_CHATROOMS_FOR_USER = gql`
 query getChatRoomsForUser($userId: Int!) {
     getChatRoomsForUser(userId: $userId) {
       id
       name
-
+      password
       users {
         id
         firstName
@@ -41,6 +44,9 @@ query getChatRoomsForUser($userId: Int!) {
       messages {
         content
       }
+      mutedUsers{
+        id
+    }
     }
   }
 `

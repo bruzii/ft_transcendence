@@ -4,7 +4,11 @@ import { User } from './entities/user.entity';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
 import { Friend } from 'src/friend/entities/friend.entity';
+import { UseGuards } from '@nestjs/common';
+import { AuthGuardToken } from 'src/auth/guards/auth.guard';
+
 @Resolver(() => User)
+@UseGuards(AuthGuardToken)
 export class UserResolver {
   constructor(private readonly userService: UserService) {}
 
@@ -19,13 +23,13 @@ export class UserResolver {
   }
 
   @Mutation(() => Friend)
-  addFriend(@Args('id', { type: () => Int }) id: number, @Args('email') email: string) {
-    return this.userService.addFriend(id, email);
+  addFriend(@Args('id', { type: () => Int }) id: number, @Args('friendId') friendId: number) {
+    return this.userService.addFriend(id, friendId);
   }
 
   @Mutation(() => Friend)
-  suppFriend(@Args('id', { type: () => Int }) id: number, @Args('email') email: string) {
-    return this.userService.suppFriend(id, email);
+  suppFriend(@Args('id', { type: () => Int }) id: number, @Args('friendId') friendId: number) {
+    return this.userService.suppFriend(id, friendId);
   }
 
   @Query(() => User, { name: 'userOne' })
@@ -47,7 +51,7 @@ export class UserResolver {
   suppXP(@Args('id', { type: () => Int }) id: number, @Args('xp', { type: () => Int }) xp: number) {
     return this.userService.suppXP(id, xp);
   }
-  
+
   @Mutation(() => User)
   addXP(@Args('id', { type: () => Int }) id: number, @Args('xp', { type: () => Int }) xp: number) {
     return this.userService.addXP(id, xp);

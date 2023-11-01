@@ -1,17 +1,22 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, ForbiddenException, Response } from '@nestjs/common';
+import { CanActivate, ExecutionContext, Injectable, UnauthorizedException, ForbiddenException } from '@nestjs/common';
 import { AuthService } from '../auth.service';
 import * as cookie from 'cookie';
 import * as jwt from 'jsonwebtoken';
-
+import { GqlExecutionContext } from '@nestjs/graphql';
 @Injectable()
 export class AuthGuardToken implements CanActivate {
     constructor(private readonly authService: AuthService) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
         try {
-            const request = context.switchToHttp().getRequest();
-            const response = context.switchToHttp().getResponse(); // Récupérer l'objet Response
-
+            console.log("AuthGuardToken");
+                    const ctx = GqlExecutionContext.create(context);
+        const request = ctx.getContext().req;
+        const { res } = ctx.getContext();
+        console.log("res : " + res)
+        console.log("request.headers.cookie : " + request.headers.cookie)
+                    // const request = context.switchToHttp().getRequest();
+            // const res = context.switchToHttp().getResponse(); // Récupérer l'objet res
             const cookies = cookie.parse(request.headers.cookie || '');
             const token = cookies?.token;
             const refreshToken = cookies?.refreshToken;
@@ -19,7 +24,7 @@ export class AuthGuardToken implements CanActivate {
 
             if (!token || !refreshToken) {
                 // Utiliser la méthode `status()` pour définir le code de statut de la réponse
-                response.status(401).send('Please provide a valid token'); // 401 pour non autorisé
+                res.status(401).send('Please provide a valid token'); // 401 pour non autorisé
                 return false; // Return false pour indiquer que la validation a échoué
             }
             const decoded = await new Promise((resolve, reject) => {
@@ -40,11 +45,14 @@ export class AuthGuardToken implements CanActivate {
                                 }
          
                                 const newToken = this.authService.createToken({ userId: userId, email: email}, 'newToken');
-                                response.cookie('token', newToken, {
+                                console.log("newToken : " + newToken);
+                                
+                                res.cookie('token', newToken, {
                                     httpOnly: true,
-                                    secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
-                                    sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
+                                    // secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
+                                    // sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
                                 });
+                                console.log("dkk")
                                 resolve(decoded);
                             }
                         });

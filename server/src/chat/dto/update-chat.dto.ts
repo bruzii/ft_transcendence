@@ -3,13 +3,13 @@ import { InputType, Field } from '@nestjs/graphql';
 
 @InputType()
 export class UpdateChatDto {
-    @Field()
-    @IsString()
-    @IsNotEmpty()
-    name: string;
+    @Field({ nullable: true})
+    name?: string;
 
-    @Field(() => [String])
-    userIds: string[];
+    @Field(() => [String], { nullable: true })
+    userIds?: string[];
 
+    @Field({ nullable: true })
+    id?: number;
     
 }

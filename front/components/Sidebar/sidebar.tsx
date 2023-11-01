@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import styled from "styled-components";
-import { MdSpaceDashboard } from "react-icons/md";
-import { RiDashboard2Fill } from "react-icons/ri";
+import { BsFillChatDotsFill } from "react-icons/bs";
+import { IoLogoGameControllerB } from "react-icons/io";
 import { FaAddressCard, FaTaxi } from "react-icons/fa";
 import { FaRegMap } from "react-icons/fa";
 import { AiOutlineBars } from "react-icons/ai";
@@ -245,10 +245,22 @@ const linksArray = [
         notification: 2,
     },
     {
+      label: "Game",
+      icon: <IoLogoGameControllerB style={{width:'23px', height: '23px'}}/>,
+      to: "/game",
+      notification: 2,
+  },
+    {
       label: "ChatRoom",
-      icon:  <FaRegMap style={{width:'23px', height: '23px'}}/>,
+      icon:  <BsFillChatDotsFill style={{width:'23px', height: '23px'}}/>,
       to: "/chat",
       notification: 3,
+  },
+  {
+    label: "Friends",
+    icon: <FaAddressCard style={{width:'23px', height: '23px'}}/>,
+    to: "/friends",
+    notification: 4,
   },
     {
         label: "Profile",
@@ -323,7 +335,7 @@ export default function Sidebar() {
               )}
           </div>
         <div className="brand">
-          <Image src={front} width={150} height={55}/>
+          {/* <Image src={front} width={150} height={55}/> */}
           </div>
             <div className="links">
               <ul>

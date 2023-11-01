@@ -59,14 +59,14 @@ export class AuthService {
         // Ajoutez le JWT dans un cookie HTTP-only
         res.cookie('token', token, {
           httpOnly: true,
-          secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
-          sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
+          // secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
+          // sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
         });
 
         res.cookie('refreshToken', refreshToken, {
           httpOnly: true,
-          secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
-          sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
+          // secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
+          // sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
         });
         
         return {
@@ -86,20 +86,19 @@ export class AuthService {
           data: send,
         });
 
-        // L'utilisateur est créé, générez un token JWT
         const token = this.createToken({ userId: newUser.id, email: newUser.email }, 'newToken');
         const refreshToken = this.createToken({ userId: newUser.id, email: newUser.email }, 'refreshToken');
         console.log("token : " + token);
-        // Ajoutez le JWT dans un cookie HTTP-only
+
         res.cookie('token', token, {
           httpOnly: true,
-          secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
-          sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
+          secure: true,
+          sameSite: 'strict', 
         });
         res.cookie('refreshToken', refreshToken, {
           httpOnly: true,
-          secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
-          sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
+          secure: true, 
+          sameSite: 'strict', 
         });
 
         return {
@@ -109,7 +108,6 @@ export class AuthService {
       }
     } catch (error) {
       console.log(error);
-      // Gérez les erreurs ici, par exemple, renvoyez une réponse d'erreur appropriée.
       throw new Error('Error in validateUser');
     }
   }
@@ -123,8 +121,8 @@ export class AuthService {
     }
 
     try {
-      const user = await this.authVerification(req.user, res); // Fournissez l'objet de réponse (res) ici
-      // console.log("user : " + JSON.stringify(user));
+      const user = await this.authVerification(req.user, res); 
+
       return {
         message: 'User Info from 42',
         sucess: true,
@@ -132,7 +130,7 @@ export class AuthService {
         token: user.token
       };
     } catch (error) {
-      // Gérez les erreurs ici, par exemple, renvoyez une réponse d'erreur appropriée.
+
       console.log(error);
       throw new Error('Error in authenticate');
     }
@@ -147,13 +145,8 @@ export class AuthService {
   }
 
   findAll() {
-    // this.authTwoFAService.generateTwoFactorAuthenticationSecret({email: "test@gmail.com"});
     return `This action returns all auth`;
   }
-
-  // findOne(id: number) {
-  //   return `This action returns a #${id} auth2`;
-  // }
 
   update(id: number, updateAuthDto: UpdateAuthDto) {
     return `This action updates a #${id} auth`;

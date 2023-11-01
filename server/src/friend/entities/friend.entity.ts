@@ -14,4 +14,10 @@ export class Friend {
   @Field(() => User, { nullable: true } )
   friend: User;
 
+  @Field(() => Boolean, { nullable: true } )
+  accepted: boolean;
+
+  @Field(() => Boolean)
+  pending: boolean;
+
 }

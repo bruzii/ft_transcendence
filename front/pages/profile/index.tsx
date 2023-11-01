@@ -5,18 +5,24 @@ import jwt_decode from "jwt-decode";
 import { useToken, useRole } from "../../hooks";
 import { Box } from "../../themes/styles";
 import toast, { Toaster } from "react-hot-toast";
-import { Grid, Label} from "../../components/Form/styles";
+import { Grid2 } from "../../themes/styles";
+import { Label } from "../../themes/styles";
 import { Label2, InputLabel, Input } from "../../themes/styles";
 import Image from "next/image";
 import { validateForm } from "../../helpers/helpers";
 import { Touch } from "../../helpers/helpers";
 import { useMutation } from "@apollo/client";
-import { Button,  Title} from "../login";
+import { Button,  Title, Subtitle} from "../login";
 import { UPDATE_USER } from "../../Apollo/mutations/user";
 import { useQuery } from "@apollo/client";
 import { GET_USER_QUERY } from "../../Apollo/query/user";
 import { hasChanged } from "../../helpers/helpers";
-
+import { Container } from "../../themes/styles";
+import { GET_FRIENDS, GET_FRIENDS_PENDING } from "../../Apollo/query/friend";
+import { useUserInfoState } from "../../context/userContext";
+import AddFriends from "../../components/friend/addFriends";
+import { IoIosAddCircle } from 'react-icons/io';
+import RequestPending from "../../components/friend/requestPending";
 
 const BaubleBox = styled.div`
   display: inline-block;
@@ -82,6 +88,8 @@ const Section = styled.div`
   padding: 20px;
   align-items: center;
 `;
+
+
 interface DecodedToken {
   email: string;
   role: string;
@@ -89,17 +97,12 @@ interface DecodedToken {
   exp: number;
 }
 
-const Container = styled.div`
-  display: flex;
-  width: 100%;
-  height: 100%;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-`;
+
 const Profile = () => {
-  const [id, setId] = useState<number | null>(1);
   const [isActive, setIsActive] = useState(false);
+  const [popupAdd, setPopupadd] = useState(false);
+  const [popupRequest, setPopupRequest] = useState(false);
+  const { id } = useUserInfoState();
   const [
     updateUserMutation,
     { loading: mutationLoading, error: mutationError, data: mutationData },
@@ -112,6 +115,20 @@ const Profile = () => {
     variables: { id: id },
     skip: !id,
   });
+  const { loading, error, data, refetch} = useQuery(GET_FRIENDS, {
+    variables: {
+        userId: id
+    },
+    skip: !id,
+  })
+  const { loading: queryLoading2, error: queryError2, data: queryData2, refetch: refetch2 } = useQuery(GET_FRIENDS_PENDING, {
+    variables: {
+        userId: id
+    },
+    skip: !id,
+  })
+
+  
   console.log(JSON.stringify(mutationError, null, 2));
   const [Initprofile, setInitProfile] = useState({
     userName: null, // Initialisez avec une chaîne vide au lieu de null
@@ -144,20 +161,19 @@ const Profile = () => {
       [name]: value,
     }));
   };
-
+  useEffect(() => {
+    console.log("data ", data)
+    if (data && data.friendByUserId){
+        console.log("data.getFriendPrending ", data.friendByUserId)
+    }
+    console.log("queryData2 ", queryData2?.getFriendPrending?.length
+    )
+}, [data, queryData2])
   const OnSumbmit = async (e: any) => {
     e.preventDefault();
     console.log("profile ", profile);
     if (Initprofile && profile && hasChanged(Initprofile, profile)) {
       try {
-
-        // const {
-        //   userName,
-        //   email,
-        //   lastName,
-        //   firstName,
-        // } = profile;
-
         const { data } = await updateUserMutation({
           variables: {
             updateUserInput: {
@@ -165,7 +181,7 @@ const Profile = () => {
               lastName: profile.lastName,
               firstName: profile.firstName,
               TwoFA: profile.TwoFA, // Assurez-vous que "TwoFa" est correctement orthographié pour correspondre au schéma côté serveur
-              id: 5,
+              id:id,
             },
           },
         });
@@ -211,8 +227,15 @@ const Profile = () => {
       <Box>
         <Section>
           <Title>Profile Settings</Title>
-          <Grid
+          <Grid2
           >
+          <ContainerInput>
+            <div><Subtitle> {data?.friendByUserId ? data.friendByUserId.length : 0} Amies</Subtitle></div>
+            <div onClick={() => setPopupadd(!popupAdd)}><IoIosAddCircle color="green"/></div>
+          </ContainerInput>
+          <ContainerInput>
+           <div onClick={() => setPopupRequest(!popupRequest)}><Subtitle>{queryData2?.getFriendPrending? queryData2?.getFriendPrending?.length: 0} Demande(s)</Subtitle></div> 
+          </ContainerInput>
           <ContainerInput>
             <Label>xp</Label>
               <Input
@@ -263,10 +286,12 @@ const Profile = () => {
                 </BaubleLabel>
                 </BaubleBox>
           </ContainerInput>
-          </Grid>
+          </Grid2>
           <Button onClick={OnSumbmit}>Enregistrer</Button>
         </Section>
         </Box>
+        {popupAdd && <AddFriends refetch={refetch} setPopup={setPopupadd}/>}
+        {popupRequest && queryData2?.getFriendPrending &&  <RequestPending refetchPending={refetch} refetch={refetch2} friends={queryData2?.getFriendPrending} setPopup={setPopupRequest}/>}
         <Toaster position="top-center" reverseOrder={false}></Toaster>
     </Container>
   );

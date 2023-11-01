@@ -7,6 +7,7 @@ import { PrismaService } from './prisma/prisma.service';
 import { AuthModule } from './auth/auth.module';
 import { FriendModule } from './friend/friend.module';
 import { ChatModule } from './chat/chat.module';
+import { GameModule } from './game/game.module';
 
 @Module({
   imports: [
@@ -15,11 +16,13 @@ import { ChatModule } from './chat/chat.module';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
       playground: true,
+      context: ({ req, res }) => ({ req, res }),
     }),
     UserModule,
     AuthModule,
     FriendModule,
     ChatModule,
+    GameModule,
   ],
   providers: [PrismaService],
 })
