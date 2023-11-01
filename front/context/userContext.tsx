@@ -47,8 +47,8 @@ import { io } from "socket.io-client";
 
   export function UserInfoProvider({ children }: IProps) {
     const [email, setEmail] = useState<string | null>(null);
-    const [id, setid] = useState(5);
-    const [socket] = useState(() => io('http://localhost:3000'))
+    const [id, setid] = useState(1);
+    const [socket] = useState(() => io(`${process.env.NEXT_PUBLIC_URL}:3000`))
     const { loading: queryLoading, error: queryError, data: queryData } = useQuery(GET_USER_QUERY, {
       variables: { email: email },
       skip: !email,

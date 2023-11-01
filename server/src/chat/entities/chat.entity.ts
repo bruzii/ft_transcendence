@@ -39,6 +39,12 @@ export class Message {
     @Field({ nullable: true})
     content: string;
 
+    @Field({nullable: true})
+    isInvite?: Boolean
+    
+    @Field({ nullable: true})
+    event?: string;
+
     @Field(() => User, { nullable: true})
     user?: User;
 

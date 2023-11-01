@@ -207,8 +207,10 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     async createGame(sender: Socket, data: any) {
       console.log("data : " + JSON.stringify(data))
       const game = await this.gameService.createGame(data.player2Id, data.player1Id);
+      await this.chatService.saveEvent(data.message, data.userId, data.roomId)
       console.log("game : " + game.id)
       console.log(`friend_${data.player2Id}`)
+      this.server.to(`channel_${data.roomId}`).emit('message::receive::user::add', "Rejoinez la partie !");
       this.server.to(`friend_${data.player2Id}`).emit('game::create::add', ` ${data.player1Id} created a game with ${data.player2Id}`);
     }
 

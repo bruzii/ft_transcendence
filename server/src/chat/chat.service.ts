@@ -36,6 +36,22 @@ export class ChatService {
     });
   }
 
+
+  async saveEvent(content: string, userId: number, chatRoomId: number): Promise<Message> {
+    console.log("content : " + content)
+    return this.prisma.message.create({
+      data: {
+        content: content,  // <- Ajoutez ceci
+        event: content,
+        isInvite: true,
+        userId: userId,
+        chatRoomId: chatRoomId,
+      }
+    });
+}
+
+
+
   async findOrCreatePrivateChatRoom(user1Id: number, user2Id: number): Promise<number> {
     const chatRoom = await this.prisma.chatRoom.findFirst({
       where: {

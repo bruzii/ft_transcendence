@@ -21,7 +21,8 @@ import { Label2 } from "../../themes/styles";
 import { useMutation } from "@apollo/client";
 import { LOGIN_USER } from "../../Apollo/mutations/user";
 import { InputContainer } from "../../themes/styles";
-import { useFormState } from "../../context/userContext";
+import * as dotenv from 'dotenv';
+dotenv.config();
 import { useRouter } from "next/router";
 import LoadingWidget from "../loading";
 import { ResetPasswordProvider } from "../../context/resetPassword";
@@ -195,8 +196,10 @@ const Login = () => {
   // };
   const OnSubmit = (e: any) => {
     e.preventDefault();
-    window.location.href = 'http://localhost:3000/auth';
-};
+    console.log(`${process.env.NEXT_PUBLIC_URL}:3000/auth`)
+    window.location.href = `${process.env.NEXT_PUBLIC_URL}:3000/auth`;
+  };
+  
 
 
   //console.log(state)

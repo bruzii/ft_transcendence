@@ -85,6 +85,7 @@ model Message {
   content    String
   event      String?
   userId     Int
+  isInvite   Boolean?
   chatRoomId Int
   createdAt  DateTime @default(now())
   chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)

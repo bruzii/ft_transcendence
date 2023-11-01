@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { GET_MESSAGES_FOR_CHATROOM } from '../../Apollo/query/chat';
 import { useQuery } from '@apollo/client';
 import toast, { Toaster } from "react-hot-toast";
+import Router from 'next/router';
 import ReactDOM from 'react-dom';
 import { FiMoreVertical } from 'react-icons/fi';
 import { BiMessageRoundedAdd } from 'react-icons/bi';
@@ -127,7 +128,7 @@ const Conversation = () => {
             password: password,
         },
         
-        skip: typeof id === "undefined"
+        skip: !password && !isPublic
     });
     const { loading: loading3, error: error3, data: userData, refetch: refetch3 } = useQuery(GET_CHATROOMS_FOR_USER, {
         variables: {
@@ -154,17 +155,17 @@ const Conversation = () => {
     
             const currentChatRoom = groupName2[0];
             
-            setListUser(currentChatRoom.users);
-            setIsPublic(!currentChatRoom.password); // If password exists, it's private, otherwise public
-            setListMutedUser(currentChatRoom.mutedUsers);
-            if (currentChatRoom.password &&( unLockChat === null || unLockChat === true ||( data && data.getAllMessagesFromChatRoom && data.getAllMessagesFromChatRoom.length === 0))) {
+            setListUser(currentChatRoom?.users);
+            setIsPublic(!currentChatRoom?.password); // If password exists, it's private, otherwise public
+            setListMutedUser(currentChatRoom?.mutedUsers);
+            if (currentChatRoom?.password &&( unLockChat === null || unLockChat === true ||( data && data.getAllMessagesFromChatRoom && data.getAllMessagesFromChatRoom.length === 0))) {
                 console.log("kkkkkkk")
                 setUnLockChat(false);
             } else {
                 setUnLockChat(true);
             }
             console.log("currentChatRoom.mutedUsers ", currentChatRoom)
-            const isMuted = currentChatRoom.mutedUsers?.some((mutedUser: any) => mutedUser.id === userId);
+            const isMuted = currentChatRoom?.mutedUsers?.some((mutedUser: any) => mutedUser.id === userId);
            console.log("isMuted ", isMuted)
             setIsMuted(isMuted);
 
@@ -172,17 +173,17 @@ const Conversation = () => {
             // Update state in one go
             setState(prevState => ({
                 ...prevState,
-                name: currentChatRoom.name || "",
-                password: currentChatRoom.password || ""
+                name: currentChatRoom?.name || "",
+                password: currentChatRoom?.password || ""
             }));
-            setMessages([]);
-            setGroupName(currentChatRoom.name 
+            // setMessages([]);
+            setGroupName(currentChatRoom?.name 
                 ? currentChatRoom.name 
-                : currentChatRoom.users.map((user: any) => user.firstName).join(", "));
+                : currentChatRoom?.users.map((user: any) => user.firstName).join(", "));
             
-            console.log("groupName2[0].password ", currentChatRoom.password);
-            console.log("groupName2[0].name ", currentChatRoom.name);
-            console.log("userData.getChatRoomsForUser ", userData.getChatRoomsForUser);
+            console.log("groupName2[0].password ", currentChatRoom?.password);
+            console.log("groupName2[0].name ", currentChatRoom?.name);
+            console.log("userData.getChatRoomsForUser ", userData?.getChatRoomsForUser);
             console.log("listUsers ", listUser)
         }
         // refetch();
@@ -191,7 +192,7 @@ const Conversation = () => {
     
     useEffect(() => {
         socket.emit('join', `channel_${id}`);
-        socket.emit('join', `friend_3`);
+        socket.emit('join', `friend_2`);
         // socket.emit('join', `game_`);
         socket.on('message::receive::user::add', (message) => {
             console.log("message 22 ", message)
@@ -271,33 +272,36 @@ const Conversation = () => {
         return listMutedUser?.some((mutedUser: any) => { return mutedUser.id === id });
     }
 
+    useEffect(() => {
+        console.log("messages", messages)
+    }, [messages])
     
     useEffect(() => {
+        console.log("data 333", data);
         
         if (data && data.getAllMessagesFromChatRoom && data.getAllMessagesFromChatRoom.length > 0) {
-            console.log("data ", data);
-            setMessages(data.getAllMessagesFromChatRoom);
-            // setIsPublic(data.getAllMessagesFromChatRoom[0].chatRoom?.password ? false : true)
-            // setListMutedUser(data.getAllMessagesFromChatRoom[0].chatRoom?.mutedUsers);
-            const userArray = data?.getAllMessagesFromChatRoom[0].chatRoom?.users.map((user: any) => { console.log(user); return user.firstName});
-            console.log("userArray ", userArray)
-            // const isMuted = data?.getAllMessagesFromChatRoom[0].chatRoom?.mutedUsers.some((mutedUser: any) => { return mutedUser.id === user });
-            // setIsMuted(isMuted);
-            
-            console.log("isMuted ", isMuted)
-            let name : string | null = null;
-            data.getAllMessagesFromChatRoom.chatRoom?.name ? name = data.getAllMessagesFromChatRoom.chatRoom?.name : name = userArray?.join(", ");
+            console.log("data.getAllMessagesFromChatRoom", data.getAllMessagesFromChatRoom)
+            setMessages(prevMessages => [...(prevMessages || []), ...(data.getAllMessagesFromChatRoom || [])]);
+
+        console.log("messages", messages)
+            const userArray = data.getAllMessagesFromChatRoom[0].chatRoom?.users.map((user) => user.firstName);
+            console.log("userArray ", userArray);
+    
+            let name = data.getAllMessagesFromChatRoom.chatRoom?.name || userArray?.join(", ");
             name && setGroupName(name);
         } else if (data && data.getAllMessagesFromChatRoom && data.getAllMessagesFromChatRoom.length === 0) {
+            console.log("ALERT");
             setMessages([]);
         }
-
-        if (friendsData && friendsData.friendByUserId){
-            console.log("friendsData.getUserAll 2", friendsData.friendByUserId)
-            setListFriend(friendsData.friendByUserId)
+    
+        if (friendsData && friendsData.friendByUserId) {
+            console.log("friendsData.getUserAll 2", friendsData.friendByUserId);
+            setListFriend(friendsData.friendByUserId);
         }
-        console.log("userId ", userId)
-    }, [data, event, friendsData, password]);
+    
+        console.log("userId ", userId);
+    
+    }, [data, event, friendsData, password, id]);
 
     if (typeof id === "undefined") {
         return null;
@@ -432,6 +436,9 @@ const Conversation = () => {
         const firstPlayer = player2[0] as any;
         
         const data = {
+            message:" Rejoigner la partie",
+            userId: userId,
+            roomId: Number(id),
             player2Id: firstPlayer.id,
             player1Id: userId,
         };
@@ -457,7 +464,14 @@ const Conversation = () => {
                 {messages?.map((message: any) => {
                     return (
                         <>
-                        <Message 
+                       {
+                        message.isInvite ?
+                        <button 
+                        onClick={() => {
+                            Router.push("/game")
+                        }}>Join the partie</button>
+                        : (
+                            <Message 
                         key={message.id}
                         id={message?.id}
                         date={message?.createdAt}
@@ -465,7 +479,10 @@ const Conversation = () => {
                         author={message?.user?.firstName}
                         isPrimary={message?.user?.id === userId}
                         message={message?.content}
-                        />
+                         />
+                        )
+                       } 
+                       
                         </>
                     );
                 })}
@@ -563,7 +580,10 @@ const Conversation = () => {
                        <button onClick={() => {
                         if(tempPassword) {
                             setPassword(tempPassword);
+                            setTimeout(() => {
                             refetch();
+                            }, 1000)
+                            
                             setUnLockChat(true);
                         }
                     }}>Valider</button>

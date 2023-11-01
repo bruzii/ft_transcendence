@@ -6,6 +6,7 @@ export const GET_MESSAGES_FOR_CHATROOM = gql`
     id
     content
     createdAt
+    isInvite
     user {
       firstName
       lastName

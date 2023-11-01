@@ -26,7 +26,7 @@ const errorLink = onError(({ operation, graphQLErrors, networkError }) => {
 });
 
 const httpLink = new HttpLink({
-  uri: "http://localhost:3000/graphql",
+  uri: `${process.env.NEXT_PUBLIC_URL}:3000/graphql`,
   headers: {
     credentials: "include",
     mode: "cors",

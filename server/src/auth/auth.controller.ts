@@ -41,7 +41,7 @@ export class AuthController {
         const test = await this.userService.setOnline(user.id);
         console.log("user apres connected : " + test.connected);
         // res.status(200).send(user);
-        const frontendRedirectUrl = `http://localhost:3001/`; 
+        const frontendRedirectUrl = `${process.env.URL}:3001/`; 
         res.redirect(frontendRedirectUrl);
         return {
           user: user,

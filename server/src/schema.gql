@@ -53,7 +53,9 @@ type Message {
   chatRoom: ChatRoom
   content: String
   createdAt: DateTime!
+  event: String
   id: Int!
+  isInvite: Boolean
   user: User
 }
 
