@@ -12,9 +12,11 @@ import { GiHamburgerMenu } from "react-icons/gi";
 import { VscChromeClose } from "react-icons/vsc";
 import Link from "next/link";
 import { LogeOut } from "../../helpers/helpers";
-import front from "../../assets/images/logo.png"
 import Image from "next/image";
 import { useToken } from "../../hooks";
+import {LOGOUT }from "../../Apollo/mutations/user/index"
+import { useMutation } from "@apollo/client";
+import Router from "next/router";
 // import scrollreveal from "scrollreveal";
 
 const Section = styled.section`
@@ -232,58 +234,69 @@ const ResponsiveNav = styled.div<{state: boolean}>`
   }
 `;
 const linksArray = [
-    {
-        label: "Accueil",
-        icon: <AiOutlineBars style={{width:'23px', height: '23px'}}/>,
-        to: "/",
-        notification: 1,
-    },
-    {
-        label: "Historique",
-        icon: <BiTime style={{width:'23px', height: '23px'}}/>,
-        to: "/history",
-        notification: 2,
-    },
-    {
-      label: "Game",
-      icon: <IoLogoGameControllerB style={{width:'23px', height: '23px'}}/>,
-      to: "/game",
-      notification: 2,
+  {
+      label: "Accueil",
+      icon: <AiOutlineBars style={{width:'23px', height: '23px'}}/>,
+      to: "/",
+      notification: 1,
   },
-    {
-      label: "ChatRoom",
-      icon:  <BsFillChatDotsFill style={{width:'23px', height: '23px'}}/>,
-      to: "/chat",
+  {
+      label: "Historique",
+      icon: <BiTime style={{width:'23px', height: '23px'}}/>,
+      to: "/history",
       notification: 3,
   },
   {
-    label: "Friends",
-    icon: <FaAddressCard style={{width:'23px', height: '23px'}}/>,
-    to: "/friends",
+    label: "Game",
+    icon: <IoLogoGameControllerB style={{width:'23px', height: '23px'}}/>,
+    to: "/game",
     notification: 4,
+},
+  {
+    label: "ChatRoom",
+    icon:  <BsFillChatDotsFill style={{width:'23px', height: '23px'}}/>,
+    to: "/chat",
+    notification: 5,
+},
+{
+  label: "Friends",
+  icon: <FaAddressCard style={{width:'23px', height: '23px'}}/>,
+  to: "/friends",
+  notification: 6
+},
+  {
+      label: "Profile",
+      icon: <FaAddressCard style={{width:'23px', height: '23px'}}/>,
+      to: "/profile",
+      notification: 7,
   },
-    {
-        label: "Profile",
-        icon: <FaAddressCard style={{width:'23px', height: '23px'}}/>,
-        to: "/profile",
-        notification: 4,
-    },
-    {
-      label: "Logout",
-      icon: <FiLogOut style={{width:'20px', height: '20px'}} />,
-      to: "/login",
-      notification: 5,
-  },
+  {
+    label: "Logout",
+    icon: <FiLogOut style={{width:'20px', height: '20px'}} />,
+    to: "/login",
+    notification: 8,
+},
 ];
-
 export default function Sidebar() {
   const [show, setShow] = useState(false)
   const [currentLink, setCurrentLink] = useState(1);
   const [navbarState, setNavbarState] = useState(false);
+  const [logout, { data, loading, error }] = useMutation(LOGOUT);
   // const html = document.querySelector("html");
   // html?.addEventListener("click", () => setNavbarState(false));
 
-  
+  const handleLogout =  () => {
+    logout().then(response => {
+      // La réponse contient le résultat de votre mutation
+      console.log("response ", response)
+      if (response.data) {
+        Router.push("/login");
+      }
+    }).catch(err => {
+      // Gérez l'erreur ici
+    });
+  };
+
   useEffect(() => {
     // const sr = scrollreveal({
     //   origin: "left",
@@ -343,7 +356,7 @@ export default function Sidebar() {
                     
                     res.label === "Logout" 
                     ? (
-                      <div onClick={HandleLogout}>
+                      <div key={res.notification} onClick={handleLogout}>
                       <li
                         className={currentLink === res.notification ? "active" : "none"}
                         onClick={() => setCurrentLink(res.notification)}
@@ -397,7 +410,7 @@ export default function Sidebar() {
                 </Link>
             ))}
           </ul>
-          <div className="logout" onClick={HandleLogout}>
+          <div className="logout" onClick={handleLogout}>
             <p> 
               <FiLogOut style={{width:'20px', height: '20px'}} />
               <span className="logout">Logout</span>

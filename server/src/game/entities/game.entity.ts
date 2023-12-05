@@ -23,10 +23,10 @@ export class Game {
   scorePlayer2?: number;
 
   @Field({ nullable: true})
-  startedAt: Date;
+  startedAt?: Date;
 
   @Field({ nullable: true})
-  endedAt: Date;
+  endedAt?: Date;
 
   @Field(() => User, { nullable: true})
   player1?: User;

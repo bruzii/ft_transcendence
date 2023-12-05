@@ -6,12 +6,20 @@ import toast, { Toaster } from "react-hot-toast";
 import Chat from "../../components/chat2/chat";
 import Spinner from "../../components/chat2/spinner";
 import { Message, MessageSendHandler, SendClickHandler } from "../../constants/types";
-
+import { GET_USER_QUERY_COOKIES } from "../../Apollo/query/user";
+import { useQuery } from "@apollo/client";
 const Friends: React.FC = () => {
     const { id: userId } = useUserInfoState();
     const [messages, setMessages] = useState<Message[]>([]);
     const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false); // Ajoutez cet état
+    const { loading: queryLoading, error: queryError, data: queryData } = useQuery(GET_USER_QUERY_COOKIES)
+
+    useEffect(() => {
+        if (queryData) {
+            console.log("queryData ", queryData)
+        }
+    }, [queryData])
 
     useEffect(() => {
         // This is a placeholder for fetching historical messages

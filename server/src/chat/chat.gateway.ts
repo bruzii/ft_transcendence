@@ -5,13 +5,14 @@ import { GameService } from 'src/game/game.service';
 import { Socket, Server } from 'socket.io';
 import { UserService } from 'src/user/user.service';
 import { FriendService } from 'src/friend/friend.service';
-@WebSocketGateway(
-  {
-    cors: {
-      origin: '*',
-    },
+
+
+@WebSocketGateway({
+  cors: {
+    origin: 'http://localhost:3001',
   },
-)
+})
+
 
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
@@ -208,10 +209,12 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       console.log("data : " + JSON.stringify(data))
       const game = await this.gameService.createGame(data.player2Id, data.player1Id);
       await this.chatService.saveEvent(data.message, data.userId, data.roomId)
+      const user = await this.userService.findOne(data.player1Id);
+      const friend = await this.userService.findOne(data.player2Id);
       console.log("game : " + game.id)
       console.log(`friend_${data.player2Id}`)
-      this.server.to(`channel_${data.roomId}`).emit('message::receive::user::add', "Rejoinez la partie !");
-      this.server.to(`friend_${data.player2Id}`).emit('game::create::add', ` ${data.player1Id} created a game with ${data.player2Id}`);
+      this.server.to(`channel_${data.roomId}`).emit('message::receive::user::add', "Rejoindre la partie !");
+      this.server.to(`friend_${data.player2Id}`).emit('game::create::add', ` ${user.firstName} vous invite a jouer !`);
     }
 
     @SubscribeMessage('game::launch')
@@ -220,6 +223,15 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await this.gameService.launchGame(data.gameId);
       this.server.to(`game_${data.gameId}`).emit('game::launch::add', ` ${data.gameId} has been launched`);
     }
+
+    @SubscribeMessage('game::finish')
+    async finishGame(sender: Socket, data: any) {
+      console.log("data : " + JSON.stringify(data))
+      await this.gameService.finishGame(data);
+      this.server.to(`game_${data.gameId}`).emit('game::launch::add', ` ${data.gameId} has been launched`);
+    }
+
+
     //#endregion
     @SubscribeMessage('message::delete')
     @SubscribeMessage('typing')

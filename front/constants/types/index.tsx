@@ -1,6 +1,7 @@
 export interface DecodedToken {
     email: string;
-    role: string;
+    twoFA: boolean;
+    userId: number;
     iat: number;
     exp: number;
     // Ajoutez d'autres propriétés si nécessaire

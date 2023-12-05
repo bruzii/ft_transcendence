@@ -21,7 +21,7 @@ import { useUserInfoState } from '../../context/userContext';
 import AddUser from './addUser';
 import Message from '../chat2/message';
 import { PiGameControllerFill } from 'react-icons/pi';
-
+import React from 'react';
 const Container = styled.div`
     display: flex;
     position: relative;
@@ -192,7 +192,7 @@ const Conversation = () => {
     
     useEffect(() => {
         socket.emit('join', `channel_${id}`);
-        socket.emit('join', `friend_2`);
+        socket.emit('join', `friend_1`);
         // socket.emit('join', `game_`);
         socket.on('message::receive::user::add', (message) => {
             console.log("message 22 ", message)
@@ -244,6 +244,7 @@ const Conversation = () => {
             setEvent(message);
         });
         socket.on('game::create::add', (message) => {
+            toast.success(<b>{message}</b>);
             console.log("message 221 ", message)
             refetch();
             setEvent(message);
@@ -281,8 +282,8 @@ const Conversation = () => {
         
         if (data && data.getAllMessagesFromChatRoom && data.getAllMessagesFromChatRoom.length > 0) {
             console.log("data.getAllMessagesFromChatRoom", data.getAllMessagesFromChatRoom)
-            setMessages(prevMessages => [...(prevMessages || []), ...(data.getAllMessagesFromChatRoom || [])]);
-
+            // setMessages(prevMessages => [...(prevMessages || []), ...(data.getAllMessagesFromChatRoom || [])]);
+            setMessages(data.getAllMessagesFromChatRoom)
         console.log("messages", messages)
             const userArray = data.getAllMessagesFromChatRoom[0].chatRoom?.users.map((user) => user.firstName);
             console.log("userArray ", userArray);
@@ -294,14 +295,17 @@ const Conversation = () => {
             setMessages([]);
         }
     
+        console.log("userId ", userId);
+    
+    }, [data, password, id]);
+
+    useEffect(() => {
         if (friendsData && friendsData.friendByUserId) {
             console.log("friendsData.getUserAll 2", friendsData.friendByUserId);
             setListFriend(friendsData.friendByUserId);
         }
-    
-        console.log("userId ", userId);
-    
-    }, [data, event, friendsData, password, id]);
+        console.log("listFriend ", listFriend);
+    }, [friendsData]);
 
     if (typeof id === "undefined") {
         return null;
@@ -461,31 +465,33 @@ const Conversation = () => {
                 </div>
             </Header>
             <ChatArea>
-                {messages?.map((message: any) => {
-                    return (
-                        <>
-                       {
-                        message.isInvite ?
+            {messages?.map((message: any) => {
+                // Ensure message.id is unique for each message
+                return (
+                    <React.Fragment key={message.id}> {/* React.Fragment can hold the key instead of `<>` */}
+                    {
+                        message?.isInvite ?
                         <button 
                         onClick={() => {
-                            Router.push("/game")
-                        }}>Join the partie</button>
-                        : (
-                            <Message 
-                        key={message.id}
+                            Router.push(`/game?id=${id}`);
+                        }}
+                        >
+                        Join the partie
+                        </button>
+                        :
+                        <Message 
                         id={message?.id}
                         date={message?.createdAt}
                         sent={message?.user?.id === userId}
                         author={message?.user?.firstName}
                         isPrimary={message?.user?.id === userId}
                         message={message?.content}
-                         />
-                        )
-                       } 
-                       
-                        </>
-                    );
+                        />
+                    }
+                    </React.Fragment>
+                );
                 })}
+
                 {event && <MesssageHeader>{event}</MesssageHeader>}
             </ChatArea>
             <Footer>
@@ -590,6 +596,7 @@ const Conversation = () => {
 
                     </PopupContainer>
                 )}
+                <Toaster position='top-right' reverseOrder={false} />
         </Container>
     );
 }

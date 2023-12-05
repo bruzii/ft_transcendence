@@ -1,10 +1,10 @@
-import { Resolver, Query, Mutation, Args, Int} from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Int, Context} from '@nestjs/graphql';
 import { UserService } from './user.service';
 import { User } from './entities/user.entity';
 import { CreateUserInput } from './dto/create-user.input';
 import { UpdateUserInput } from './dto/update-user.input';
 import { Friend } from 'src/friend/entities/friend.entity';
-import { UseGuards } from '@nestjs/common';
+import { UseGuards, Req } from '@nestjs/common';
 import { AuthGuardToken } from 'src/auth/guards/auth.guard';
 
 @Resolver(() => User)
@@ -20,6 +20,12 @@ export class UserResolver {
   @Query(() => [User], { name: 'userAll' })
   findAll() {
     return this.userService.findAll();
+  }
+
+  @Query(() => User, { nullable: true }) // nullable: true si l'utilisateur peut ne pas être trouvé
+  async getUsers(@Context() context) {
+    console.log("context : " + context.req);
+    return this.userService.getUser(context);
   }
 
   @Mutation(() => Friend)
@@ -69,5 +75,11 @@ export class UserResolver {
   @Mutation(() => User)
   removeUser(@Args('id', { type: () => Int }) id: number) {
     return this.userService.remove(id);
+  }
+
+  @Mutation(() => String)
+  async logout(@Context() context) {
+    await this.userService.logout(context);
+    return "Logout"; // Retourne vrai pour indiquer que l'action a été effectuée
   }
 }

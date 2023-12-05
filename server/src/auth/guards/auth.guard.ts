@@ -8,13 +8,17 @@ export class AuthGuardToken implements CanActivate {
     constructor(private readonly authService: AuthService) {}
 
     async canActivate(context: ExecutionContext): Promise<boolean> {
-        try {
-            console.log("AuthGuardToken");
-                    const ctx = GqlExecutionContext.create(context);
+        const ctx = GqlExecutionContext.create(context);
         const request = ctx.getContext().req;
         const { res } = ctx.getContext();
+        try {
+            console.log("AuthGuardToken");
         console.log("res : " + res)
-        console.log("request.headers.cookie : " + request.headers.cookie)
+        
+        console.log("request.headers.cookie : " + request.body.operationName)
+        const operationName = request.body.operationName;
+        if (operationName === "login" || operationName === "") 
+            return true;
                     // const request = context.switchToHttp().getRequest();
             // const res = context.switchToHttp().getResponse(); // Récupérer l'objet res
             const cookies = cookie.parse(request.headers.cookie || '');
@@ -24,9 +28,11 @@ export class AuthGuardToken implements CanActivate {
 
             if (!token || !refreshToken) {
                 // Utiliser la méthode `status()` pour définir le code de statut de la réponse
+                console.log("Please provide a valid token");
                 res.status(401).send('Please provide a valid token'); // 401 pour non autorisé
                 return false; // Return false pour indiquer que la validation a échoué
             }
+            console.log("token : 123");
             const decoded = await new Promise((resolve, reject) => {
                 jwt.verify(token, secret, (err, decoded) => {
                     if (err) {
@@ -67,7 +73,8 @@ export class AuthGuardToken implements CanActivate {
             return true;
         } catch (error) {
             console.log('auth error - ', error.message);
-            throw new UnauthorizedException(error.message || 'Session expired! Please sign in');
+            res.status(401).send(error.message || 'Session expired! Please sign in');
+            // throw new UnauthorizedException(error.message || 'Session expired! Please sign in');
         }
     }
 }

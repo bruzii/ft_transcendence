@@ -1,7 +1,6 @@
 import styled, { css } from "styled-components";
 import { ReactNode, useEffect } from "react";
 import { useState } from "react";
-import jwt_decode from "jwt-decode";
 import { useToken, useRole } from "../../hooks";
 import { Box } from "../../themes/styles";
 import toast, { Toaster } from "react-hot-toast";
@@ -9,8 +8,7 @@ import { Grid2 } from "../../themes/styles";
 import { Label } from "../../themes/styles";
 import { Label2, InputLabel, Input } from "../../themes/styles";
 import Image from "next/image";
-import { validateForm } from "../../helpers/helpers";
-import { Touch } from "../../helpers/helpers";
+import axios from "axios";
 import { useMutation } from "@apollo/client";
 import { Button,  Title, Subtitle} from "../login";
 import { UPDATE_USER } from "../../Apollo/mutations/user";
@@ -23,6 +21,7 @@ import { useUserInfoState } from "../../context/userContext";
 import AddFriends from "../../components/friend/addFriends";
 import { IoIosAddCircle } from 'react-icons/io';
 import RequestPending from "../../components/friend/requestPending";
+import QrCode from "../../components/popup/qrCode";
 
 const BaubleBox = styled.div`
   display: inline-block;
@@ -103,6 +102,8 @@ const Profile = () => {
   const [popupAdd, setPopupadd] = useState(false);
   const [popupRequest, setPopupRequest] = useState(false);
   const { id } = useUserInfoState();
+  const [img, setImg] = useState<string>("");
+  const [popup, setPopup] = useState(false);
   const [
     updateUserMutation,
     { loading: mutationLoading, error: mutationError, data: mutationData },
@@ -172,8 +173,16 @@ const Profile = () => {
   const OnSumbmit = async (e: any) => {
     e.preventDefault();
     console.log("profile ", profile);
+    console.log("Initprofile ", Initprofile);
     if (Initprofile && profile && hasChanged(Initprofile, profile)) {
       try {
+        console.log("profile.TwoFA ", profile.TwoFA)
+        console.log("queryData.userOne.TwoFA ", queryData.userOne.TwoFA)
+        if (profile.TwoFA === true &&  !Initprofile.TwoFA){
+
+          
+          handleQrCode();
+        }
         const { data } = await updateUserMutation({
           variables: {
             updateUserInput: {
@@ -188,8 +197,8 @@ const Profile = () => {
 
         // console.log("data.updateUserMutation ", data);
         // let { token } = data.UpdateUser;
-        // console.log(token);
-        // setInitProfile(profile);
+        // console.log(token)
+        setInitProfile(profile);
         // localStorage.clear();
         // localStorage.setItem("token", token);
         toast.success(<b>Profil Modifie</b>);
@@ -201,18 +210,34 @@ const Profile = () => {
     }else
     toast.error(<b>Aucunes Informations Modifiees</b>);
   };
-  // useEffect(() => {
-  //   console.log("useToken " + Token);
-  //   if (Token) {
-  //     let decode = jwt_decode(Token) as DecodedToken;
-  //     console.log("decode = " + JSON.stringify(decode));
-  //     setId(decode.email);
-  //     console.log("decode : " + JSON.stringify(decode));
-  //   }
-  // }, [Token]);
-  const handleToggle = () => {
-    profile.TwoFA = !profile.TwoFA;
+
+  const handleQrCode = async () => {
+    try {
+      const resp = await axios.get(`http://localhost:3000/generateQRCode/${id}`);
+      console.log("resp ", resp)
+      if (resp.status === 200) {
+        const { data } = resp;
+        setImg(data);
+        console.log("typo ", typeof data)
+        setPopup(true);
+      } else {
+        // // Traitez les réponses non 200 ici
+        // toast.error(<b>An error occurred during login!</b>);
+      }
+
+    } catch (error) {
+      console.log("error ", error)
+    }
+  }
+
+  const handleToggle = async () => {
+    setProfile((prev: any) => ({
+      ...prev,
+      TwoFA: !prev.TwoFA,
+    }));
+    setIsActive(!isActive);
   };
+
   useEffect(() => {
     if (queryData) {
       console.log("queryData ", queryData);
@@ -222,6 +247,9 @@ const Profile = () => {
     }
   }, [queryData]);
 
+  const setFalse = () => {
+    setPopup(false);
+  };
   return (
     <Container>
       <Box>
@@ -291,8 +319,9 @@ const Profile = () => {
         </Section>
         </Box>
         {popupAdd && <AddFriends refetch={refetch} setPopup={setPopupadd}/>}
-        {popupRequest && queryData2?.getFriendPrending &&  <RequestPending refetchPending={refetch} refetch={refetch2} friends={queryData2?.getFriendPrending} setPopup={setPopupRequest}/>}
+        {popupRequest && queryData2?.getFriendPrending &&  <RequestPending refetchFriend={refetch} refetch={refetch2} friends={queryData2?.getFriendPrending} setPopup={setPopupRequest}/>}
         <Toaster position="top-center" reverseOrder={false}></Toaster>
+        {popup && <QrCode  qrCode={img} onClose={setFalse}/>}
     </Container>
   );
 };

@@ -29,3 +29,16 @@ export const GET_USER_ALL = gql`
     }
   }
 `;
+export const GET_USER_QUERY_COOKIES = gql`
+  query GetUser {
+    getUsers {
+      id
+      lastName
+      firstName
+      email
+      xp
+      userName
+      TwoFA
+    }
+  }
+`;

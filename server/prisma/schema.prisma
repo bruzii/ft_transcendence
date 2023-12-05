@@ -29,77 +29,64 @@ model User {
   blocked                       Blocked[]  @relation("Blocked_users")
   friendOf                      Friend[]   @relation("Friend_friends")
   friends                       Friend[]   @relation("Friend_users")
+  gamesAsPlayer1                Game[]     @relation("Player1ToGame")
+  gamesAsPlayer2                Game[]     @relation("Player2ToGame")
+  gamesWon                      Game[]     @relation("WinnerToGame")
   messages                      Message[]
+  adminInChatRooms              ChatRoom[] @relation("chatroomAdmin")
+  bannedInChatRooms             ChatRoom[] @relation("chatroomBannedUsers")
+  mutedInChatRooms              ChatRoom[] @relation("chatroomMutedUsers")
   chatRooms                     ChatRoom[] @relation("chatroomUser")
-  adminInChatRooms              ChatRoom[]  @relation("chatroomAdmin")
-  bannedInChatRooms           ChatRoom[]  @relation("chatroomBannedUsers")
-  mutedInChatRooms            ChatRoom[]  @relation("chatroomMutedUsers")
-  gamesAsPlayer1              Game[] @relation("Player1ToGame")
-  gamesAsPlayer2              Game[] @relation("Player2ToGame")
-  gamesWon                    Game[] @relation("WinnerToGame")
 }
 
 model Game {
-  id        Int      @id @default(autoincrement())
-  player1Id Int
-  player2Id Int
-  waiting    Boolean @default(true)
-  scorePlayer1 Int @default(0)
-  scorePlayer2 Int @default(0)
-  waitingForPlayer  Boolean? @default(true)
-  startedAt  DateTime   @default(now())
-  endedAt    DateTime?
-  winnerId   Int?
-
-  player1    User @relation("Player1ToGame", fields: [player1Id], references: [id])
-  player2    User @relation("Player2ToGame", fields: [player2Id], references: [id])
-  winner     User? @relation("WinnerToGame", fields: [winnerId], references: [id])
-}
-
-enum GameStatus {
-  IN_PROGRESS
-  COMPLETED
-}
-
-
-enum InvitationStatus {
-  PENDING
-  ACCEPTED
-  DECLINED
+  id               Int       @id @default(autoincrement())
+  player1Id        Int
+  player2Id        Int
+  scorePlayer1     Int       @default(0)
+  scorePlayer2     Int       @default(0)
+  startedAt        DateTime?
+  endedAt          DateTime?
+  winnerId         Int?
+  waiting          Boolean   @default(true)
+  waitingForPlayer Boolean?  @default(true)
+  player1          User      @relation("Player1ToGame", fields: [player1Id], references: [id])
+  player2          User      @relation("Player2ToGame", fields: [player2Id], references: [id])
+  winner           User?     @relation("WinnerToGame", fields: [winnerId], references: [id])
 }
 
 model ChatRoom {
-  id        Int       @id @default(autoincrement())
-  name      String?
-  password  String?
-  createdAt DateTime  @default(now())
-  messages  Message[]
-  users     User[]    @relation("chatroomUser")
-  admins         User[]            @relation("chatroomAdmin")
-  bannedUsers    User[]            @relation("chatroomBannedUsers")
-  mutedUsers     User[]            @relation("chatroomMutedUsers")
+  id          Int       @id @default(autoincrement())
+  name        String?
+  createdAt   DateTime  @default(now())
+  password    String?
+  messages    Message[]
+  admins      User[]    @relation("chatroomAdmin")
+  bannedUsers User[]    @relation("chatroomBannedUsers")
+  mutedUsers  User[]    @relation("chatroomMutedUsers")
+  users       User[]    @relation("chatroomUser")
 }
 
 model Message {
   id         Int      @id @default(autoincrement())
   content    String
-  event      String?
   userId     Int
-  isInvite   Boolean?
   chatRoomId Int
   createdAt  DateTime @default(now())
+  event      String?
+  isInvite   Boolean?
   chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Friend {
-  id       Int  @id @default(autoincrement())
+  id       Int      @id @default(autoincrement())
   userId   Int
   friendId Int
-  pending  Boolean?   @default(true)
-  accepted Boolean?  
-  friend   User @relation("Friend_friends", fields: [friendId], references: [id])
-  user     User @relation("Friend_users", fields: [userId], references: [id])
+  accepted Boolean?
+  pending  Boolean? @default(true)
+  friend   User     @relation("Friend_friends", fields: [friendId], references: [id])
+  user     User     @relation("Friend_users", fields: [userId], references: [id])
 
   @@unique([userId, friendId])
 }
@@ -112,4 +99,15 @@ model Blocked {
   user      User @relation("Blocked_users", fields: [userId], references: [id])
 
   @@unique([userId, blockedId])
+}
+
+enum GameStatus {
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
 }

@@ -1,5 +1,4 @@
 import styled, { css, keyframes} from 'styled-components';
-import fond from "../assets/images/fondHome3.png"
 
 
 const pulse = keyframes`

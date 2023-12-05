@@ -22,10 +22,58 @@ export class GameService {
   }
 
   async launchGame(id: number) {
-    await this.prisma.game.update({
+   return await this.prisma.game.update({
       where: { id: id },
       data: {
         waitingForPlayer: false,
+        startedAt: new Date(),
+      },
+      include: {
+        winner: true,
+      },
+    });
+  }
+
+  async finishGame(data : UpdateGameInput) {
+    console.log("data", data)
+    let winnerId: number = data.scorePlayer1 > data.scorePlayer2 ? data.player1Id : data.player2Id;
+    console.log("winnerId", winnerId)
+    return await this.prisma.game.update({
+      where: { id: data.id },
+      data: {
+        winnerId: winnerId,
+        endedAt : new Date(),
+        scorePlayer1: data.scorePlayer1,
+        scorePlayer2: data.scorePlayer2,
+      },
+      include: {
+        winner: true,
+      },
+    });
+  }
+
+  async getAllGameForUserPlayer1(id: number) {
+    return await this.prisma.game.findMany({
+      where: {
+        player1Id: id,
+      },
+      include: {
+        player1: true,
+        player2: true,
+        winner: true,
+      },
+    });
+  }
+
+  async getAllGameForUserPlayer2(id: number) {
+    return await this.prisma.game.findMany({
+      where: {
+        player2Id: id,
+      },
+      include: {
+        player1: true,
+        player2: true,
+        winner: true,
       },
     });
   }
@@ -34,8 +82,8 @@ export class GameService {
     return `This action returns all game`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} game`;
+ async findOne(id: number) {
+    return await this.prisma.game.findUnique({where: {id: id}});
   }
 
   update(id: number, updateGameInput: UpdateGameInput) {

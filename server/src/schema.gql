@@ -68,7 +68,11 @@ type Mutation {
   addWin(id: Int!): User!
   addXP(id: Int!, xp: Int!): User!
   createChatRoom(friends: [UpdateUserInput!]!, userId: Int!): ChatRoom!
+  createGame(playerId1: Int!, playerId2: Int!): Game!
   deleteChatRoom(chatRoomId: Int!, userId: Int!): String!
+  finishGame(updateGameInput: UpdateGameInput!): Game!
+  launchGame(id: Int!): Game!
+  logout: String!
   removeFriend(id: Int!): Friend!
   removeGame(id: Int!): Game!
   removeUser(id: Int!): User!
@@ -77,7 +81,6 @@ type Mutation {
   suppFriend(friendId: Float!, id: Int!): Friend!
   suppXP(id: Int!, xp: Int!): User!
   updateFriend(updateFriendInput: UpdateFriendInput!): Friend!
-  updateGame(updateGameInput: UpdateGameInput!): Game!
   updateUser(updateUserInput: UpdateUserInput!): User!
 }
 
@@ -86,10 +89,13 @@ type Query {
   friend(id: Int!): Friend!
   friendByUserId(userId: Int!): [User!]!
   game(id: Int!): Game!
+  gameAllForUserPlayer1(id: Int!): [Game!]!
+  gameAllForUserPlayer2(id: Int!): [Game!]!
   getAllMessagesFromChatRoom(chatRoomId: Int!, password: String): [Message!]!
   getChatRoomsForUser(userId: Int!): [ChatRoom!]!
   getFriendPrending(userId: Int!): [User!]!
   getMessagesForChatRoom(chatRoomId: Int!): [Message!]!
+  getUsers: User
   userAll: [User!]!
   userOne(id: Int!): User!
 }
@@ -103,9 +109,13 @@ input UpdateFriendInput {
 }
 
 input UpdateGameInput {
-  """Example field (placeholder)"""
-  exampleField: Int
+  endedAt: DateTime
   id: Int!
+  player1Id: Float
+  player2Id: Float
+  scorePlayer1: Float
+  scorePlayer2: Float
+  winnerId: Float
 }
 
 input UpdateUserInput {

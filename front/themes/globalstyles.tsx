@@ -1,5 +1,4 @@
 import { createGlobalStyle } from "styled-components";
-import fond from "../assets/images/fonHome2.png"
 
 
 const GlobalStyle = createGlobalStyle`
@@ -24,9 +23,9 @@ body::before {
   left: 0;
   min-height: 100%; // ensure cover all height
   width: 100%;
-  background-image: url(${fond.src});
+  background-image: ;
   background-size: cover;
-  background-color: #0D0E12;
+  background-color: #fff;
   background-position: center;
   background-repeat: no-repeat;
   z-index: -1;

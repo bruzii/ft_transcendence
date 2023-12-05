@@ -8,14 +8,25 @@ import { UpdateGameInput } from './dto/update-game.input';
 export class GameResolver {
   constructor(private readonly gameService: GameService) {}
 
-  // @Mutation(() => Game)
-  // createGame(@Args('createGameInput') createGameInput: CreateGameInput) {
-  //   return this.gameService.create(createGameInput);
-  // }
+  @Mutation(() => Game)
+  createGame(@Args('playerId1', { type: () => Int }) playerId1: number,
+              @Args('playerId2', { type: () => Int }) playerId2: number) {
+    return this.gameService.createGame(playerId1, playerId2);
+  }
 
   @Query(() => [Game], { name: 'game' })
   findAll() {
     return this.gameService.findAll();
+  }
+
+  @Query(() => [Game], { name: 'gameAllForUserPlayer1' })
+  getAllGameForUser(@Args('id', { type: () => Int }) id: number) {
+    return this.gameService.getAllGameForUserPlayer1(id);
+  }
+
+  @Query(() => [Game], { name: 'gameAllForUserPlayer2' })
+  getAllGameForUserPlayer2(@Args('id', { type: () => Int }) id: number) {
+    return this.gameService.getAllGameForUserPlayer2(id);
   }
 
   @Query(() => Game, { name: 'game' })
@@ -24,8 +35,13 @@ export class GameResolver {
   }
 
   @Mutation(() => Game)
-  updateGame(@Args('updateGameInput') updateGameInput: UpdateGameInput) {
-    return this.gameService.update(updateGameInput.id, updateGameInput);
+  finishGame(@Args('updateGameInput') updateGameInput: UpdateGameInput) {
+    return this.gameService.finishGame(updateGameInput);
+  }
+
+  @Mutation(() => Game)
+  launchGame(@Args('id', { type: () => Int }) id: number) {
+    return this.gameService.launchGame(id);
   }
 
   @Mutation(() => Game)

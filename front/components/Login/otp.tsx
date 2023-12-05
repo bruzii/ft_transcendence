@@ -3,10 +3,10 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import Router from 'next/router';
 import { InputGroup } from '../../pages/login/index'
-import { VALIDATE_FORGOT_PASSWORD } from '../../Apollo/mutations/user';
 import { useMutation } from '@apollo/client';
 import toast, { Toaster } from "react-hot-toast";
 import { useResetPassword } from '../../context/resetPassword';
+import axios from 'axios';
 
 
 const FormCardTitle = styled.p`
@@ -29,12 +29,12 @@ const FormCardInputWrapper = styled.div`
 `;
 
 const FormCardInput = styled.input`
-width: 190px;
+width: 280px;
   font-size: 2rem;
   font-weight: bold;
   letter-spacing: 2rem;
   text-align: start;
-  left: 19%;
+  left: 7%;
   transform: translateX(36px);
   position: absolute;
   z-index: 3;
@@ -43,7 +43,7 @@ width: 190px;
 `;
 
 const FormCardInputBg = styled.div`
-  width: 240px;
+  width: 320px;
   height: 60px;
   margin: auto;
   inset: 0;
@@ -97,13 +97,22 @@ const [OTP, setOTP] = useState<string | null>(null)
 const HandleChange = (e: any) => {
   setOTP(e.target.value)
 }
-const [validateForgotPassword, { loading, error, data }] = useMutation(VALIDATE_FORGOT_PASSWORD);
+
  const HandleSumit = async (e : any) => {
   e.preventDefault();
   if (!OTP) return toast.error(<b>OTP invalid 2</b>)
   try{
     console.log("otp", OTP)
-    const { data } = await validateForgotPassword({ variables: { email: resetData?.email, otp: OTP} })
+    const resp = await axios.post('http://localhost:3000/verify-2fa', {
+      twoFactorAuthenticationCode: OTP,
+      userId: 3
+    })
+    console.log("resp", resp)
+    // setResetData({
+    //   ...resetData,
+    //   otp: OTP
+    // })
+
     // redirect to 1
     toast.success(<b>OTP valid</b>, {
         duration: 700,
@@ -112,14 +121,13 @@ const [validateForgotPassword, { loading, error, data }] = useMutation(VALIDATE_
           'aria-live': 'polite',
         },
       });
-      onHandleNext();
-
+      // onHandleNext();
+      Router.push('/')
   } catch (err) {
     toast.error(<b>OTP invalid</b>)
     console.log(err)
   }
   }
-  console.log(JSON.stringify(error, null, 2));
   useEffect(() => {
     console.log("Code ", OTP)
   }, [OTP])
@@ -129,8 +137,8 @@ const [validateForgotPassword, { loading, error, data }] = useMutation(VALIDATE_
       <FormCardPrompt>Enter last 4 digits of the number we sent by email</FormCardPrompt>
       <FormCardInputWrapper>
         <FormCardInput 
-        placeholder="____"  
-        maxLength={4} 
+        placeholder="______"  
+        maxLength={6} 
         onChange={HandleChange}
         value={OTP ? OTP : ""}
         />

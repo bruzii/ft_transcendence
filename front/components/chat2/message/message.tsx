@@ -2,7 +2,7 @@ import React, {FC, useEffect, useState} from 'react';
 import {MessageContainer, MessageHeading, MessageText} from "./message.styles";
 import {Message as IMessage, MessageSendHandler} from '../../../constants/types';
 import { FaCheckDouble } from 'react-icons/fa';
-import indicator from '../../../assets/images/message.svg';
+import indicator from '../../../assets/svg/message.svg';
 
 
 

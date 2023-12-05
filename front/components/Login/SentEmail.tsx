@@ -5,8 +5,6 @@ import { LogoContainer, TitleContainer, Button, Title, Subtitle } from "../../pa
 import { Input } from "../../themes/styles"
 import { InputContainer } from "../../themes/styles"
 import { useState } from "react"
-import front from "../../assets/images/Logo_Black.png";
-import { FORGOT_PASSWORD } from "../../Apollo/mutations/user"
 import { useMutation } from "@apollo/client"
 import Router from "next/router"
 import Otp from "./otp"
@@ -22,44 +20,14 @@ const SentEmail = () => {
         setEmail(e.target.value)
         setResetData({email: e.target.value})
     }
-    const [forgotPassword, { data }] = useMutation(FORGOT_PASSWORD, {
-        variables: {
-            email: email,
-            skip: !email
-        }
-    })
 
-    const OnSubmit = async (e : any) => {
-        e.preventDefault()
-        if (email === null || email === ""){
-            toast.error("Email is required")
-            return
-        }
-        try {
-            const { data } = await forgotPassword()
-            // if user exist set true else setError
-            console.log("data received", data.ForgotPassword.otp.id);
-            console.log("data received", data.ForgotPassword);
-            setId(data.ForgotPassword.otp.id)
-            toast.success(<b>{data.ForgotPassword.message}</b>, {
-                duration: 700,
-                ariaProps: {
-                  role: 'status',
-                  'aria-live': 'polite',
-                },
-              });
-              onHandleNext();
-        }catch(err) {
-            toast.error(<b>Utilisateur non trouve</b>)
-            console.log("err")
-        }
-    }
+
     console.log("step" , step)
     return (
         <>
             <>
             <LogoContainer>
-            <Image src={front} width={150} height={80} />
+            {/* <Image src={front} width={150} height={80} /> */}
             </LogoContainer>
             <TitleContainer>
                 <Title>Reset Password</Title>
@@ -79,7 +47,7 @@ const SentEmail = () => {
                 onChange={OnchangeValue}
                 />
                 {error ? <p>{error}</p> : null}
-                <Button onClick={OnSubmit}>Envoyer</Button>
+                {/* <Button onClick={OnSubmit}>Envoyer</Button> */}
             </InputContainer>
        </>
        </>

@@ -1,5 +1,5 @@
 import React from 'react';
-import pulse from '../../../assets/images/pulse.svg';
+import pulse from '../../../assets/svg/message.svg';
 
 const Spinner = () => {
   return (

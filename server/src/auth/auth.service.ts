@@ -2,7 +2,7 @@ import { Injectable, Res } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { UpdateAuthDto } from './dto/update-auth.dto';
 import { UserService } from 'src/user/user.service';
-import { HttpException, HttpStatus } from '@nestjs/common';
+import { HttpException, HttpStatus,Body} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import { Response } from 'express';
@@ -23,7 +23,8 @@ export class AuthService {
   constructor(private readonly users_svc: UserService,
      private prisma : PrismaService,
       private readonly jwtServ: JwtService,
-      private authTwoFAService:AuthTwoFAService  ) {}
+      private userService: UserService,
+      private readonly auth2FAService: AuthTwoFAService, ) {}
   
   validateToken(token: string) {
     return this.jwtServ.verify(token, {
@@ -43,6 +44,7 @@ export class AuthService {
       });
       return  token;
   }
+
   async authVerification(details: UserDetails, @Res() res: Response) {
     console.log('AuthService');
     console.log("details : " + stringify(details));
@@ -53,8 +55,11 @@ export class AuthService {
 
       if (user) {
         // L'utilisateur existe, générez un token JWT
-        const token = this.createToken({ userId: user.id, email: user.email }, 'newToken');
-        const refreshToken = this.createToken({ userId: user.id, email: user.email }, 'refreshToken');
+        console.log('User found. Generating token...');
+        console.log("user : " + JSON.stringify(user));
+        const token = this.createToken({ userId: user.id, email: user.email, twoFA: user.TwoFA }, 'newToken');
+        const refreshToken = this.createToken({ userId: user.id, email: user.email, twoFA: user.TwoFA}, 'refreshToken');
+        if (user.TwoFA) {
         console.log("token : " + token);
         // Ajoutez le JWT dans un cookie HTTP-only
         res.cookie('token', token, {
@@ -68,10 +73,11 @@ export class AuthService {
           // secure: true, // Vous pouvez définir ceci sur true si vous utilisez HTTPS
           // sameSite: 'strict', // Vous pouvez ajuster cela selon vos besoins
         });
-        
+      }
         return {
           user: user,
           token : token,
+          refreshToken : refreshToken,
         };
       } else {
         console.log('User not found. Creating...');
@@ -86,8 +92,8 @@ export class AuthService {
           data: send,
         });
 
-        const token = this.createToken({ userId: newUser.id, email: newUser.email }, 'newToken');
-        const refreshToken = this.createToken({ userId: newUser.id, email: newUser.email }, 'refreshToken');
+        const token = this.createToken({ userId: newUser.id, email: newUser.email, twoFA: false }, 'newToken');
+        const refreshToken = this.createToken({ userId: newUser.id, email: newUser.email, twoFA: false}, 'refreshToken');
         console.log("token : " + token);
 
         res.cookie('token', token, {
@@ -104,6 +110,7 @@ export class AuthService {
         return {
           user : newUser,
           token : token,
+          refreshToken : refreshToken,
         };
       }
     } catch (error) {
@@ -127,12 +134,51 @@ export class AuthService {
         message: 'User Info from 42',
         sucess: true,
         user: user.user,
-        token: user.token
+        token: user.token,
+        refreshToken: user.refreshToken,
       };
     } catch (error) {
 
       console.log(error);
       throw new Error('Error in authenticate');
+    }
+  }
+
+  async verifyTwoFactorAuthenticationCode(@Body() body, @Res() res: Response) {
+    try {
+      const { twoFactorAuthenticationCode, userId } = body;
+      const user = await this.userService.findOne(userId);
+      console.log("user", user);
+      if (!user) {
+        return res.status(400).send('Cannot find user');
+      }
+      console.log("twoFactorAuthenticationCode", twoFactorAuthenticationCode);
+      console.log("user", user);
+      const isCodeValid = await this.auth2FAService.isTwoFactorAuthenticationCodeValid(
+        twoFactorAuthenticationCode,
+        user
+      );
+      console.log("isCodeValid", isCodeValid);
+      if (isCodeValid) {
+        const token = this.createToken({ userId: user.id, email: user.email, twoFA: true }, 'newToken');
+        const refreshToken = this.createToken({ userId: user.id, email: user.email, twoFA: true}, 'refreshToken');
+        console.log("token : " + token);
+        res.cookie('token', token, {
+          httpOnly: true,
+          // secure: true,
+          // sameSite: 'strict',
+        });
+        res.cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+          // secure: true,
+          // sameSite: 'strict',
+        });
+        return res.status(200).send('Successfully validated');
+      }
+      return res.status(400).send('Invalid code');
+    } catch (error) {
+      console.error(error);
+      return res.status(500).send('Error while verifying code');
     }
   }
 

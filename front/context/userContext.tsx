@@ -6,13 +6,14 @@ import {
     useContext,
     useState,
   } from "react";
-  import { GET_USER_QUERY } from '../Apollo/query/user';
+  import { GET_USER_QUERY_COOKIES } from '../Apollo/query/user';
 import { useEffect } from "react";
 import jwtDecode from "jwt-decode";
 import { DecodedToken } from "../constants/types";
 import { useQuery } from "@apollo/client";
 import { useToken } from "../hooks";
 import { io } from "socket.io-client";
+import { useRouter } from 'next/router';
 // import { UserInfoDataType } from "../constants/interfaces";
 
   interface IUserInfoContext {
@@ -36,9 +37,17 @@ import { io } from "socket.io-client";
   }
 
   interface UserInfoDataType {
+    id: number,
+    firstName: string,
+    intraId: number,
+    TwoFA: boolean,
     email: string,
+    avatar: string,
+    achievements: string[],
     userName: string,
     lastName: string,
+    loser: number,
+    win: number,
     tel: string,
     dateOfBirth: string,
     xp: number,
@@ -46,14 +55,22 @@ import { io } from "socket.io-client";
   }
 
   export function UserInfoProvider({ children }: IProps) {
-    const [email, setEmail] = useState<string | null>(null);
-    const [id, setid] = useState(1);
+    const [id, setid] = useState<number | null>(null);
+    const [UserInfoData, setUserInfoData] = useState<UserInfoDataType | null>(null);
     const [socket] = useState(() => io(`${process.env.NEXT_PUBLIC_URL}:3000`))
-    const { loading: queryLoading, error: queryError, data: queryData } = useQuery(GET_USER_QUERY, {
-      variables: { email: email },
-      skip: !email,
-    });
-    const [UserInfoData, setUserInfoData] = useState<number | null>(null);
+    const router = useRouter();
+    const isLoginPage = router.pathname.includes('/login');
+    const { loading: queryLoading, error: queryError, data: queryData } = useQuery(GET_USER_QUERY_COOKIES, { skip: isLoginPage });
+
+    useEffect(() => {
+        if (queryData && queryData.getUsers) {
+            console.log("queryData 123", queryData)
+            setUserInfoData(queryData.getUsers)
+            setid(queryData.getUsers.id)
+        }
+    }, [queryData])
+
+    console.log("UserInfoData 1", UserInfoData)
     useEffect(() => { 
       console.log("UserInfoData 2", UserInfoData)
     }, [UserInfoData])

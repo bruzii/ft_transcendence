@@ -27,5 +27,10 @@ mutation updateUser($updateUserInput: UpdateUserInput!) {
     lastName
   }
 }
+`;
 
+export const LOGOUT = gql`
+mutation logout {
+  logout
+}
 `;

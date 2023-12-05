@@ -1,19 +1,13 @@
 'use-client'
-import { useState, useContext } from "react";
-import { RoleContext, RoleType } from "../context";
-import { GetServerSideProps } from "next";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/router";
-import { useEffect } from "react";
-import { useRole } from "../hooks";
+import { useState, useContext, useEffect } from "react";
 import styled from "styled-components";
-import { AuthorizeUser } from "../components/Authorize";
+import { useUserInfoState } from "../context/userContext";
 import Router from "next/router";
 import Link from "next/link";
+import jwtDecode from "jwt-decode";
 import { Route } from "react-router-dom";
-import { useToken } from "../hooks";
-import { TokenContext } from "../context";
-//const data = User()
+import { useRouter } from "next/router";
+import { DecodedToken } from "../constants/types";
 
 const StyledLink = styled(Link)`
 font-size: 30px;
@@ -22,26 +16,31 @@ color:red;
 
 
 export default  function Home() {
-  const router = useRouter();
-  const protectedPaths = ["/admin", "/admin/profile", "/admin/dashbrd", "/admin/setting", "/admin/statistics"];
-  const protectedUser = ["/", "/form", "/history", "/profile"]
-  const token = useToken();
-  const pathaname = router.pathname;
-  const Role = useContext(RoleContext);
-  const Token = useContext(TokenContext);
+  const {onHandleSetid, id: userId} = useUserInfoState();
+  const route = useRouter();
 
   useEffect(() => {
-    const TokenStored = localStorage.getItem('token');
-    console.log("Token from Home:", TokenStored);
-    console.log("Role from home ", Role?.Role)
-    if (!TokenStored) {
-      Role?.setRole(null);
-      Token?.setToken(null);
+    if (!route.isReady) return;
+    const {token } = route.query;
+    if (token) {
+      const decodedToken = jwtDecode<DecodedToken>(token as string);
+      const { userId, twoFA } = decodedToken;
+      console.log("decodedToken", decodedToken)
+      console.log("id", userId)
+      onHandleSetid(userId);
+      if (twoFA) {
+        Router.push("/login/step");
+      } else {
+        Router.push("/");
+      }
     }
-  }, [Role,Token, router.pathname])
-  // if(Role?.Role != RoleType.USER) {
-  //   Router.push("/admin")
-  // }
+  }, [route.isReady]);
+
+  useEffect(() => {
+    console.log("userId", userId)
+  }, [userId])
+
+
     return (
       <>
         <div>

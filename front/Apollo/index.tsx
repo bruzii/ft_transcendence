@@ -19,8 +19,9 @@ const errorLink = onError(({ operation, graphQLErrors, networkError }) => {
 
     switch (status) {
       case 401:
+        console.log("status ", status);
         localStorage.removeItem("token");
-        window.location.href = "/";
+        window.location.href = "/login";
     }
   }
 });
